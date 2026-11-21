@@ -639,29 +639,29 @@
       : null;
 
     const MAJOR_ARCANA = [
-      { id: 'maj-0', num: '0', en: 'The Fool', ko: '바보', img: 'https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg', upright: '새로운 시작, 순수한 도전, 자유로운 여정과 가능성', reversed: '무모함, 부주의, 방향 상실, 섣부른 결정' },
-      { id: 'maj-1', num: 'I', en: 'The Magician', ko: '마법사', img: 'https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg', upright: '의지력, 창조적 실행력, 자원 활용, 집중과 표현', reversed: '조작, 우유부단, 재능 낭비, 기만' },
-      { id: 'maj-2', num: 'II', en: 'The High Priestess', ko: '여사제', img: 'https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg', upright: '직관, 내면의 지혜, 신비, 비밀과 침착함', reversed: '숨겨진 동기, 직관 무시, 표면적 판단' },
-      { id: 'maj-3', num: 'III', en: 'The Empress', ko: '여황제', img: 'https://upload.wikimedia.org/wikipedia/commons/d/d2/RWS_Tarot_03_Empress.jpg', upright: '풍요, 모성적 돌봄, 성장, 아름다움과 결실', reversed: '과보호, 정체, 창의성 막힘, 의존' },
-      { id: 'maj-4', num: 'IV', en: 'The Emperor', ko: '황제', img: 'https://upload.wikimedia.org/wikipedia/commons/c/c3/RWS_Tarot_04_Emperor.jpg', upright: '질서, 리더십, 책임감, 구조와 안정', reversed: '독단, 경직됨, 통제 집착, 권위 충돌' },
-      { id: 'maj-5', num: 'V', en: 'The Hierophant', ko: '교황', img: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/RWS_Tarot_05_Hierophant.jpg', upright: '전통, 가르침, 멘토십, 원칙과 신뢰', reversed: '관습 탈피, 독자적 신념, 형식주의 경계' },
-      { id: 'maj-6', num: 'VI', en: 'The Lovers', ko: '연인', img: 'https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_06_Lovers.jpg', upright: '조화, 깊은 애정, 가치관 일치, 중요한 선택', reversed: '불균형, 갈등, 선택의 망설임, 소통 부족' },
-      { id: 'maj-7', num: 'VII', en: 'The Chariot', ko: '전차', img: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg', upright: '돌파력, 승리, 목표 달성, 흔들리지 않는 추진력', reversed: '성급함, 방향 흔들림, 감정 제어 필요' },
-      { id: 'maj-8', num: 'VIII', en: 'Strength', ko: '힘', img: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg', upright: '부드러운 용기, 인내, 내면의 평온, 포용력', reversed: '자신감 저하, 조급함, 감정 소모' },
-      { id: 'maj-9', num: 'IX', en: 'The Hermit', ko: '은둔자', img: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/RWS_Tarot_09_Hermit.jpg', upright: '성찰, 고독 속의 깨달음, 신중함, 내면의 등불', reversed: '고립, 회피, 외로움 과다, 답답함' },
-      { id: 'maj-10', num: 'X', en: 'Wheel of Fortune', ko: '운명의 수레바퀴', img: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg', upright: '전환점, 행운의 흐름, 타이밍, 변화의 국면', reversed: '예상치 못한 변수, 지체, 흐름 저항' },
-      { id: 'maj-11', num: 'XI', en: 'Justice', ko: '정의', img: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/RWS_Tarot_11_Justice.jpg', upright: '공정함, 균형, 인과응보, 명확한 판단', reversed: '편파성, 불공평 느낌, 책임 회피' },
-      { id: 'maj-12', num: 'XII', en: 'The Hanged Man', ko: '매달린 사람', img: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/RWS_Tarot_12_Hanged_Man.jpg', upright: '관점 전환, 잠시 멈춤, 수용, 희생을 통한 통찰', reversed: '헛된 기다림, 희생 강요, 막힌 답답함' },
-      { id: 'maj-13', num: 'XIII', en: 'Death', ko: '죽음', img: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/RWS_Tarot_13_Death.jpg', upright: '끝과 새로운 시작, 탈피, 근본적 변화, 정리', reversed: '변화 거부, 미련, 마무리 지연' },
-      { id: 'maj-14', num: 'XIV', en: 'Temperance', ko: '절제', img: 'https://upload.wikimedia.org/wikipedia/commons/f/f8/RWS_Tarot_14_Temperance.jpg', upright: '중용, 조율, 치유, 자연스러운 흐름', reversed: '과잉, 불균형, 조급한 타협' },
-      { id: 'maj-15', num: 'XV', en: 'The Devil', ko: '악마', img: 'https://upload.wikimedia.org/wikipedia/commons/5/55/RWS_Tarot_15_Devil.jpg', upright: '집착, 유혹, 속박 인식, 현실적 욕망', reversed: '속박에서 벗어남, 각성, 집착 완화' },
-      { id: 'maj-16', num: 'XVI', en: 'The Tower', ko: '탑', img: 'https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg', upright: '급격한 변화, 고정관념 붕괴, 진실 드러남', reversed: '충격 완화, 내부적 동요, 변화 회피' },
-      { id: 'maj-17', num: 'XVII', en: 'The Star', ko: '별', img: 'https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg', upright: '희망, 영감, 치유, 맑은 비전과 믿음', reversed: '낙심, 기대 저하, 방향감 흐려짐' },
-      { id: 'maj-18', num: 'XVIII', en: 'The Moon', ko: '달', img: 'https://upload.wikimedia.org/wikipedia/commons/7/7f/RWS_Tarot_18_Moon.jpg', upright: '무의식, 감정의 파도, 불확실성, 꿈과 직감', reversed: '오해 해소, 안개 걷힘, 불안 진정' },
-      { id: 'maj-19', num: 'XIX', en: 'The Sun', ko: '태양', img: 'https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg', upright: '성공, 명랑함, 활력, 축복과 명확한 해답', reversed: '일시적 그늘, 컨디션 저하, 과신 주의' },
-      { id: 'maj-20', num: 'XX', en: 'Judgement', ko: '심판', img: 'https://upload.wikimedia.org/wikipedia/commons/d/dd/RWS_Tarot_20_Judgement.jpg', upright: '각성, 부름, 재평가, 새로운 소명', reversed: '자기비판, 결단 미룸, 망설임' },
-      { id: 'maj-21', num: 'XXI', en: 'The World', ko: '세계', img: 'https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg', upright: '완성, 성취, 통합, 원만한 마무리와 확장', reversed: '마무리 미완, 한 걸음 부족, 여운' }
-    ];
+      { id: 'maj-0', num: '0', en: 'The Fool', ko: '바보', upright: '새로운 시작, 순수한 도전, 자유로운 여정과 가능성', reversed: '무모함, 부주의, 방향 상실, 섣부른 결정' },
+      { id: 'maj-1', num: 'I', en: 'The Magician', ko: '마법사', upright: '의지력, 창조적 실행력, 자원 활용, 집중과 표현', reversed: '조작, 우유부단, 재능 낭비, 기만' },
+      { id: 'maj-2', num: 'II', en: 'The High Priestess', ko: '여사제', upright: '직관, 내면의 지혜, 신비, 비밀과 침착함', reversed: '숨겨진 동기, 직관 무시, 표면적 판단' },
+      { id: 'maj-3', num: 'III', en: 'The Empress', ko: '여황제', upright: '풍요, 모성적 돌봄, 성장, 아름다움과 결실', reversed: '과보호, 정체, 창의성 막힘, 의존' },
+      { id: 'maj-4', num: 'IV', en: 'The Emperor', ko: '황제', upright: '질서, 리더십, 책임감, 구조와 안정', reversed: '독단, 경직됨, 통제 집착, 권위 충돌' },
+      { id: 'maj-5', num: 'V', en: 'The Hierophant', ko: '교황', upright: '전통, 가르침, 멘토십, 원칙과 신뢰', reversed: '관습 탈피, 독자적 신념, 형식주의 경계' },
+      { id: 'maj-6', num: 'VI', en: 'The Lovers', ko: '연인', upright: '조화, 깊은 애정, 가치관 일치, 중요한 선택', reversed: '불균형, 갈등, 선택의 망설임, 소통 부족' },
+      { id: 'maj-7', num: 'VII', en: 'The Chariot', ko: '전차', upright: '돌파력, 승리, 목표 달성, 흔들리지 않는 추진력', reversed: '성급함, 방향 흔들림, 감정 제어 필요' },
+      { id: 'maj-8', num: 'VIII', en: 'Strength', ko: '힘', upright: '부드러운 용기, 인내, 내면의 평온, 포용력', reversed: '자신감 저하, 조급함, 감정 소모' },
+      { id: 'maj-9', num: 'IX', en: 'The Hermit', ko: '은둔자', upright: '성찰, 고독 속의 깨달음, 신중함, 내면의 등불', reversed: '고립, 회피, 외로움 과다, 답답함' },
+      { id: 'maj-10', num: 'X', en: 'Wheel of Fortune', ko: '운명의 수레바퀴', upright: '전환점, 행운의 흐름, 타이밍, 변화의 국면', reversed: '예상치 못한 변수, 지체, 흐름 저항' },
+      { id: 'maj-11', num: 'XI', en: 'Justice', ko: '정의', upright: '공정함, 균형, 인과응보, 명확한 판단', reversed: '편파성, 불공평 느낌, 책임 회피' },
+      { id: 'maj-12', num: 'XII', en: 'The Hanged Man', ko: '매달린 사람', upright: '관점 전환, 잠시 멈춤, 수용, 희생을 통한 통찰', reversed: '헛된 기다림, 희생 강요, 막힌 답답함' },
+      { id: 'maj-13', num: 'XIII', en: 'Death', ko: '죽음', upright: '끝과 새로운 시작, 탈피, 근본적 변화, 정리', reversed: '변화 거부, 미련, 마무리 지연' },
+      { id: 'maj-14', num: 'XIV', en: 'Temperance', ko: '절제', upright: '중용, 조율, 치유, 자연스러운 흐름', reversed: '과잉, 불균형, 조급한 타협' },
+      { id: 'maj-15', num: 'XV', en: 'The Devil', ko: '악마', upright: '집착, 유혹, 속박 인식, 현실적 욕망', reversed: '속박에서 벗어남, 각성, 집착 완화' },
+      { id: 'maj-16', num: 'XVI', en: 'The Tower', ko: '탑', upright: '급격한 변화, 고정관념 붕괴, 진실 드러남', reversed: '충격 완화, 내부적 동요, 변화 회피' },
+      { id: 'maj-17', num: 'XVII', en: 'The Star', ko: '별', upright: '희망, 영감, 치유, 맑은 비전과 믿음', reversed: '낙심, 기대 저하, 방향감 흐려짐' },
+      { id: 'maj-18', num: 'XVIII', en: 'The Moon', ko: '달', upright: '무의식, 감정의 파도, 불확실성, 꿈과 직감', reversed: '오해 해소, 안개 걷힘, 불안 진정' },
+      { id: 'maj-19', num: 'XIX', en: 'The Sun', ko: '태양', upright: '성공, 명랑함, 활력, 축복과 명확한 해답', reversed: '일시적 그늘, 컨디션 저하, 과신 주의' },
+      { id: 'maj-20', num: 'XX', en: 'Judgement', ko: '심판', upright: '각성, 부름, 재평가, 새로운 소명', reversed: '자기비판, 결단 미룸, 망설임' },
+      { id: 'maj-21', num: 'XXI', en: 'The World', ko: '세계', upright: '완성, 성취, 통합, 원만한 마무리와 확장', reversed: '마무리 미완, 한 걸음 부족, 여운' }
+    ].map(m => ({ ...m, img: `./cards/${m.id}.jpg` }));
 
     const SUITS = [
       { key: 'Wands', code: 'Wa', koSuit: '완드', koElement: '불·열정·행동', uprightBase: '추진력과 열정', revBase: '에너지 소모와 지체' },
@@ -705,7 +705,7 @@
           const id = `min-${suit.key.toLowerCase()}-${rank.code}`;
           const nameEn = `${rank.label} of ${suit.key}`;
           const nameKo = `${suit.koSuit} ${rank.ko}`;
-          const img = `https://upload.wikimedia.org/wikipedia/commons/${suit.code}${rank.code}.jpg`;
+          const img = `./cards/${id}.jpg`;
           deck.push({
             id,
             arcana: `마이너 아르카나 (${suit.koElement})`,
@@ -1316,9 +1316,11 @@
                 <div class="text-[10px] font-bold text-[#964F5B] text-center truncate">${card.num}</div>
                 <div class="tarot-art-box">
                   <img src="${card.img}" alt="${card.nameKo}" class="${rotClass}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                  <div class="hidden w-full h-full flex-col items-center justify-center p-1 text-center bg-[#FFFDF8]">
-                    <span class="font-display text-xs font-bold text-[#964F5B]">${card.num}</span>
+                  <div class="hidden w-full h-full flex-col items-center justify-center p-1.5 text-center bg-gradient-to-b from-[#FFFDF8] to-[#F7F3FC]">
+                    <span class="font-display text-xs font-bold text-[#D4AF37]">✦</span>
+                    <span class="font-display text-xs font-bold text-[#964F5B] mt-0.5">${card.num}</span>
                     <span class="text-[10px] font-bold text-[#2D2430] leading-tight mt-0.5">${card.nameKo}</span>
+                    <span class="text-[9px] text-[#6B5E70] leading-tight mt-0.5 truncate max-w-full">${card.nameEn}</span>
                   </div>
                 </div>
                 <div class="text-[10px] font-bold text-[#2D2430] text-center truncate">${card.nameKo}</div>
@@ -1360,7 +1362,13 @@
         const frame = document.getElementById('detailCardArtFrame');
         const rotClass = isRev ? 'is-reversed' : '';
         frame.innerHTML = `
-          <img src="${card.img}" alt="${card.nameKo}" class="w-full h-full object-cover ${rotClass}" onerror="this.remove();" />
+          <img src="${card.img}" alt="${card.nameKo}" class="w-full h-full object-cover ${rotClass}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="hidden w-full h-full flex-col items-center justify-center p-2 text-center bg-gradient-to-b from-[#FFFDF8] to-[#F7F3FC]">
+            <span class="font-display text-base text-[#D4AF37]">✦</span>
+            <span class="font-display text-xs font-bold text-[#964F5B] mt-1">${card.num}</span>
+            <span class="text-xs font-bold text-[#2D2430] mt-0.5">${card.nameKo}</span>
+            <span class="text-[10px] text-[#6B5E70] mt-0.5">${card.nameEn}</span>
+          </div>
         `;
 
         const modal = document.getElementById('cardDetailModal');
