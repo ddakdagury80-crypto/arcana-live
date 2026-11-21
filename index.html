@@ -131,13 +131,13 @@
     }
 
     .tarot-card-face {
-      width: 118px;
-      height: 196px;
+      width: 124px;
+      height: 204px;
       border-radius: 12px;
       background: linear-gradient(180deg, #FFFDF9 0%, #FAF3E6 100%);
       border: 2px solid #D4AF37;
       box-shadow: 0 10px 22px rgba(96, 67, 88, 0.14);
-      padding: 6px;
+      padding: 5px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -147,15 +147,30 @@
 
     .tarot-art-box {
       width: 100%;
-      height: 128px;
+      height: 146px;
       border-radius: 8px;
-      border: 1px solid rgba(183, 110, 121, 0.28);
+      border: 1px solid rgba(183, 110, 121, 0.3);
       background: #FFFDF8;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
+    }
+
+    .tarot-art-svg-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.22s ease;
+    }
+
+    .tarot-art-svg-wrap svg {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .is-reversed {
@@ -625,7 +640,7 @@
         <button type="button" onclick="app.closeCardDetailModal()" class="text-xs font-bold text-[#6B5E70] px-2 py-1">닫기</button>
       </div>
       <div class="flex flex-col sm:flex-row gap-4 items-center mb-4">
-        <div id="detailCardArtFrame" class="w-28 h-44 rounded-xl border-2 border-[#D4AF37] bg-[#FFFDF8] overflow-hidden shrink-0 flex items-center justify-center"></div>
+        <div id="detailCardArtFrame" class="w-32 h-48 rounded-xl border-2 border-[#D4AF37] bg-[#FFFDF8] overflow-hidden shrink-0 flex items-center justify-center"></div>
         <div class="text-center sm:text-left">
           <p id="detailCardArcana" class="text-[11px] font-semibold text-[#B76E79]"></p>
           <h3 id="detailCardName" class="text-lg font-bold text-[#2D2430] mb-1"></h3>
@@ -787,61 +802,309 @@
       return deck;
     }
 
-    function getCardArtTheme(card) {
-      if (card.id.startsWith('maj-')) {
-        return {
-          badge: '✦ MAJOR',
-          symbol: '☀✦☽',
-          accent: '#964F5B',
-          bg: 'linear-gradient(165deg, #FFFDF7 0%, #F9EEF2 55%, #F3ECFC 100%)'
-        };
-      }
-      if (card.id.includes('wands')) {
-        return {
-          badge: '🔥 WANDS',
-          symbol: '🪄',
-          accent: '#B45309',
-          bg: 'linear-gradient(165deg, #FFFDF7 0%, #FEF3C7 100%)'
-        };
-      }
-      if (card.id.includes('cups')) {
-        return {
-          badge: '💧 CUPS',
-          symbol: '🏆',
-          accent: '#9D174D',
-          bg: 'linear-gradient(165deg, #FFFDF9 0%, #FCE7F3 100%)'
-        };
-      }
-      if (card.id.includes('swords')) {
-        return {
-          badge: '🌬️ SWORDS',
-          symbol: '⚔️',
-          accent: '#3730A3',
-          bg: 'linear-gradient(165deg, #F8FAFC 0%, #EEF2FF 100%)'
-        };
-      }
-      return {
-        badge: '🌿 PENTACLES',
-        symbol: '🪙',
-        accent: '#065F46',
-        bg: 'linear-gradient(165deg, #FAFDF9 0%, #ECFDF5 100%)'
+    function getMajorSceneSvg(id) {
+      const scenes = {
+        'maj-0':
+          '<rect x="0" y="0" width="120" height="150" fill="#FFFDF6"/>' +
+          '<circle cx="92" cy="28" r="14" fill="#FACC15" stroke="#EAB308" stroke-width="2"/>' +
+          '<path d="M0 108 L44 82 L68 150 L0 150 Z" fill="#C89D66"/>' +
+          '<path d="M68 150 L82 114 L120 128 L120 150 Z" fill="#86EFAC"/>' +
+          '<circle cx="40" cy="64" r="6" fill="#FDE68A" stroke="#92400E" stroke-width="1.5"/>' +
+          '<path d="M33 71 L47 71 L49 96 L31 96 Z" fill="#38BDF8" stroke="#1E3A8A" stroke-width="1.5"/>' +
+          '<line x1="47" y1="74" x2="57" y2="62" stroke="#78350F" stroke-width="2.5" stroke-linecap="round"/>' +
+          '<circle cx="59" cy="60" r="5" fill="#F472B6"/>' +
+          '<circle cx="56" cy="108" r="4.5" fill="#FBBF24"/>',
+        'maj-1':
+          '<rect x="0" y="0" width="120" height="150" fill="#FFFBF0"/>' +
+          '<path d="M46 22 C46 15 56 15 60 22 C64 15 74 15 74 22 C74 29 64 29 60 22 C56 29 46 29 46 22 Z" fill="none" stroke="#B76E79" stroke-width="2"/>' +
+          '<path d="M42 62 L78 62 L84 114 L36 114 Z" fill="#EF4444" stroke="#7F1D1D" stroke-width="1.5"/>' +
+          '<path d="M46 66 L74 66 L71 96 L49 96 Z" fill="#F8FAFC"/>' +
+          '<line x1="86" y1="44" x2="86" y2="86" stroke="#D4AF37" stroke-width="3" stroke-linecap="round"/>' +
+          '<rect x="16" y="122" width="18" height="6" rx="2" fill="#F59E0B"/>' +
+          '<path d="M42 128 L46 118 L50 128 Z" fill="#38BDF8" stroke="#0369A1" stroke-width="1.2"/>' +
+          '<line x1="68" y1="128" x2="76" y2="118" stroke="#475569" stroke-width="2"/>' +
+          '<circle cx="94" cy="124" r="6" fill="#FACC15" stroke="#B45309" stroke-width="1.5"/>',
+        'maj-2':
+          '<rect x="0" y="0" width="120" height="150" fill="#F5F3FF"/>' +
+          '<rect x="14" y="24" width="14" height="114" fill="#E2E8F0" stroke="#475569" stroke-width="1.5"/>' +
+          '<rect x="92" y="24" width="14" height="114" fill="#334155" stroke="#0F172A" stroke-width="1.5"/>' +
+          '<path d="M36 138 L36 66 Q60 44 84 66 L84 138 Z" fill="#93C5FD" stroke="#1E40AF" stroke-width="1.5"/>' +
+          '<path d="M46 42 A14 14 0 1 0 74 42 A11 11 0 1 1 46 42 Z" fill="#FDE047"/>' +
+          '<rect x="48" y="88" width="24" height="18" rx="2" fill="#FFFDF7" stroke="#964F5B" stroke-width="1.5"/>',
+        'maj-3':
+          '<rect x="0" y="0" width="120" height="150" fill="#FEF2F2"/>' +
+          '<circle cx="60" cy="30" r="14" fill="#FDE68A" stroke="#D4AF37" stroke-width="1.5"/>' +
+          '<path d="M46 22 L52 14 L60 20 L68 14 L74 22 Z" fill="#FACC15"/>' +
+          '<path d="M34 62 Q60 54 86 62 L94 128 L26 128 Z" fill="#F9A8D4" stroke="#9D174D" stroke-width="1.5"/>' +
+          '<circle cx="98" cy="112" r="12" fill="#86EFAC" stroke="#15803D" stroke-width="1.5"/>' +
+          '<path d="M98 100 L98 88" stroke="#166534" stroke-width="2.5"/>',
+        'maj-4':
+          '<rect x="0" y="0" width="120" height="150" fill="#FFF7ED"/>' +
+          '<rect x="26" y="34" width="68" height="96" rx="4" fill="#B45309" stroke="#78350F" stroke-width="2"/>' +
+          '<path d="M36 62 L84 62 L80 124 L40 124 Z" fill="#DC2626" stroke="#7F1D1D" stroke-width="1.5"/>' +
+          '<rect x="44" y="68" width="32" height="24" rx="2" fill="#94A3B8" stroke="#334155" stroke-width="1.5"/>' +
+          '<polygon points="46,34 53,22 60,30 67,22 74,34" fill="#FACC15" stroke="#B45309" stroke-width="1.2"/>',
+        'maj-5':
+          '<rect x="0" y="0" width="120" height="150" fill="#FAF5FF"/>' +
+          '<path d="M40 136 L40 62 Q60 44 80 62 L80 136 Z" fill="#E9D5FF" stroke="#6B21A8" stroke-width="1.5"/>' +
+          '<polygon points="48,46 60,24 72,46" fill="#FACC15" stroke="#A16207" stroke-width="1.5"/>' +
+          '<line x1="24" y1="42" x2="24" y2="128" stroke="#D4AF37" stroke-width="2.5"/>' +
+          '<line x1="17" y1="54" x2="31" y2="54" stroke="#D4AF37" stroke-width="2"/>' +
+          '<line x1="19" y1="64" x2="29" y2="64" stroke="#D4AF37" stroke-width="2"/>' +
+          '<circle cx="52" cy="128" r="5" fill="#CBD5E1"/>' +
+          '<circle cx="68" cy="128" r="5" fill="#CBD5E1"/>',
+        'maj-6':
+          '<rect x="0" y="0" width="120" height="150" fill="#FDF2F8"/>' +
+          '<circle cx="60" cy="28" r="14" fill="#FDE047" stroke="#EAB308" stroke-width="1.5"/>' +
+          '<path d="M60 42 L60 72" stroke="#D97706" stroke-width="2"/>' +
+          '<circle cx="40" cy="78" r="8" fill="#FBCFE8" stroke="#BE185D" stroke-width="1.5"/>' +
+          '<path d="M28 88 L52 88 L55 128 L25 128 Z" fill="#F472B6"/>' +
+          '<circle cx="80" cy="78" r="8" fill="#BAE6FD" stroke="#0369A1" stroke-width="1.5"/>' +
+          '<path d="M68 88 L92 88 L95 128 L65 128 Z" fill="#60A5FA"/>',
+        'maj-7':
+          '<rect x="0" y="0" width="120" height="150" fill="#EFF6FF"/>' +
+          '<rect x="30" y="54" width="60" height="48" rx="6" fill="#F8FAFC" stroke="#334155" stroke-width="2"/>' +
+          '<path d="M30 54 Q60 32 90 54 Z" fill="#FACC15" stroke="#B45309" stroke-width="1.5"/>' +
+          '<circle cx="38" cy="112" r="11" fill="#1E293B" stroke="#D4AF37" stroke-width="2"/>' +
+          '<circle cx="82" cy="112" r="11" fill="#1E293B" stroke="#D4AF37" stroke-width="2"/>' +
+          '<circle cx="42" cy="26" r="7" fill="#FDE047"/>' +
+          '<circle cx="78" cy="26" r="7" fill="#E2E8F0"/>',
+        'maj-8':
+          '<rect x="0" y="0" width="120" height="150" fill="#FFFBEB"/>' +
+          '<path d="M46 22 C46 15 56 15 60 22 C64 15 74 15 74 22 C74 29 64 29 60 22 C56 29 46 29 46 22 Z" fill="none" stroke="#D97706" stroke-width="2"/>' +
+          '<ellipse cx="64" cy="104" rx="28" ry="18" fill="#FBBF24" stroke="#B45309" stroke-width="1.5"/>' +
+          '<circle cx="42" cy="92" r="13" fill="#F59E0B" stroke="#92400E" stroke-width="1.5"/>' +
+          '<path d="M26 78 L36 66 L44 82 L52 66 L58 78 Z" fill="#86EFAC" stroke="#15803D" stroke-width="1.2"/>' +
+          '<path d="M36 96 Q42 104 48 96" fill="none" stroke="#92400E" stroke-width="1.5"/>',
+        'maj-9':
+          '<rect x="0" y="0" width="120" height="150" fill="#F8FAFC"/>' +
+          '<polygon points="0,150 60,56 120,150" fill="#CBD5E1"/>' +
+          '<path d="M46 78 L74 78 L80 132 L40 132 Z" fill="#64748B" stroke="#334155" stroke-width="1.5"/>' +
+          '<circle cx="84" cy="68" r="10" fill="#FEF08A" stroke="#EAB308" stroke-width="1.5"/>' +
+          '<polygon points="84,61 86,66 91,66 87,69 88,74 84,71 80,74 81,69 77,66 82,66" fill="#F59E0B"/>',
+        'maj-10':
+          '<rect x="0" y="0" width="120" height="150" fill="#FEFCE8"/>' +
+          '<circle cx="60" cy="78" r="38" fill="#FEF3C7" stroke="#B45309" stroke-width="3"/>' +
+          '<circle cx="60" cy="78" r="22" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>' +
+          '<line x1="60" y1="40" x2="60" y2="116" stroke="#92400E" stroke-width="2"/>' +
+          '<line x1="22" y1="78" x2="98" y2="78" stroke="#92400E" stroke-width="2"/>' +
+          '<line x1="33" y1="51" x2="87" y2="105" stroke="#92400E" stroke-width="1.5"/>' +
+          '<line x1="87" y1="51" x2="33" y2="105" stroke="#92400E" stroke-width="1.5"/>',
+        'maj-11':
+          '<rect x="0" y="0" width="120" height="150" fill="#FDF4FF"/>' +
+          '<line x1="60" y1="26" x2="60" y2="128" stroke="#964F5B" stroke-width="3"/>' +
+          '<line x1="24" y1="54" x2="96" y2="54" stroke="#D4AF37" stroke-width="3"/>' +
+          '<path d="M16 74 L32 74 L24 54 Z" fill="none" stroke="#964F5B" stroke-width="1.5"/>' +
+          '<path d="M16 74 Q24 84 32 74 Z" fill="#FBCFE8" stroke="#964F5B" stroke-width="1.5"/>' +
+          '<path d="M88 74 L104 74 L96 54 Z" fill="none" stroke="#964F5B" stroke-width="1.5"/>' +
+          '<path d="M88 74 Q96 84 104 74 Z" fill="#FBCFE8" stroke="#964F5B" stroke-width="1.5"/>' +
+          '<line x1="74" y1="92" x2="46" y2="122" stroke="#64748B" stroke-width="3" stroke-linecap="round"/>',
+        'maj-12':
+          '<rect x="0" y="0" width="120" height="150" fill="#ECFDF5"/>' +
+          '<rect x="16" y="24" width="88" height="8" rx="3" fill="#78350F"/>' +
+          '<rect x="26" y="32" width="8" height="96" fill="#78350F"/>' +
+          '<rect x="86" y="32" width="8" height="96" fill="#78350F"/>' +
+          '<line x1="60" y1="32" x2="60" y2="62" stroke="#D97706" stroke-width="2.5"/>' +
+          '<circle cx="60" cy="70" r="8" fill="#FDE68A" stroke="#92400E" stroke-width="1.5"/>' +
+          '<path d="M52 78 L68 78 L64 104 L56 104 Z" fill="#EF4444"/>' +
+          '<circle cx="60" cy="70" r="15" fill="none" stroke="#FEF08A" stroke-width="2"/>',
+        'maj-13':
+          '<rect x="0" y="0" width="120" height="150" fill="#F1F5F9"/>' +
+          '<circle cx="88" cy="34" r="16" fill="#FDE047" stroke="#EAB308" stroke-width="1.5"/>' +
+          '<circle cx="60" cy="68" r="10" fill="#F8FAFC" stroke="#334155" stroke-width="2"/>' +
+          '<circle cx="57" cy="67" r="2" fill="#1E293B"/>' +
+          '<circle cx="63" cy="67" r="2" fill="#1E293B"/>' +
+          '<path d="M46 78 L74 78 L78 118 L42 118 Z" fill="#1E293B"/>' +
+          '<path d="M24 128 Q60 112 96 128" fill="none" stroke="#64748B" stroke-width="2.5"/>',
+        'maj-14':
+          '<rect x="0" y="0" width="120" height="150" fill="#F0F9FF"/>' +
+          '<path d="M36 62 L50 62 L47 78 L39 78 Z" fill="#FDE047" stroke="#B45309" stroke-width="1.5"/>' +
+          '<path d="M70 92 L84 92 L81 108 L73 108 Z" fill="#FDE047" stroke="#B45309" stroke-width="1.5"/>' +
+          '<path d="M44 74 Q60 84 76 94" fill="none" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"/>' +
+          '<polygon points="60,28 74,44 60,60 46,44" fill="none" stroke="#0284C7" stroke-width="2"/>',
+        'maj-15':
+          '<rect x="0" y="0" width="120" height="150" fill="#2E1065"/>' +
+          '<path d="M38 42 L44 22 L52 40 Z" fill="#F43F5E"/>' +
+          '<path d="M82 42 L76 22 L68 40 Z" fill="#F43F5E"/>' +
+          '<rect x="34" y="40" width="52" height="58" rx="14" fill="#4C1D95" stroke="#FBBF24" stroke-width="2"/>' +
+          '<circle cx="48" cy="62" r="5" fill="#FDE047"/>' +
+          '<circle cx="72" cy="62" r="5" fill="#FDE047"/>' +
+          '<polygon points="60,72 54,84 66,84" fill="#FB7185"/>' +
+          '<circle cx="42" cy="118" r="8" fill="#DDD6FE"/>' +
+          '<circle cx="78" cy="118" r="8" fill="#DDD6FE"/>',
+        'maj-16':
+          '<rect x="0" y="0" width="120" height="150" fill="#FFF1F2"/>' +
+          '<rect x="40" y="46" width="40" height="92" fill="#94A3B8" stroke="#475569" stroke-width="2"/>' +
+          '<polygon points="36,46 60,26 84,46" fill="#FACC15" stroke="#B45309" stroke-width="1.5"/>' +
+          '<polyline points="92,16 68,46 82,50 56,82" fill="none" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<circle cx="26" cy="72" r="6" fill="#FB923C"/>' +
+          '<circle cx="94" cy="94" r="6" fill="#FB923C"/>',
+        'maj-17':
+          '<rect x="0" y="0" width="120" height="150" fill="#EFF6FF"/>' +
+          '<polygon points="60,22 65,36 80,36 68,45 73,59 60,50 47,59 52,45 40,36 55,36" fill="#FACC15" stroke="#EAB308" stroke-width="1.2"/>' +
+          '<circle cx="28" cy="58" r="4" fill="#93C5FD"/>' +
+          '<circle cx="92" cy="58" r="4" fill="#93C5FD"/>' +
+          '<path d="M44 92 L56 92 L54 106 L46 106 Z" fill="#38BDF8" stroke="#0284C7" stroke-width="1.2"/>' +
+          '<path d="M64 92 L76 92 L74 106 L66 106 Z" fill="#38BDF8" stroke="#0284C7" stroke-width="1.2"/>' +
+          '<path d="M0 124 Q60 112 120 124 L120 150 L0 150 Z" fill="#BFDBFE"/>',
+        'maj-18':
+          '<rect x="0" y="0" width="120" height="150" fill="#EEF2FF"/>' +
+          '<circle cx="60" cy="40" r="20" fill="#FEF08A" stroke="#EAB308" stroke-width="2"/>' +
+          '<path d="M48 36 Q60 28 72 36 Q64 48 48 36 Z" fill="#6366F1"/>' +
+          '<path d="M0 104 Q30 88 60 104 T120 104 L120 150 L0 150 Z" fill="#C7D2FE"/>' +
+          '<path d="M24 134 L24 114" stroke="#334155" stroke-width="2"/>' +
+          '<path d="M96 134 L96 114" stroke="#334155" stroke-width="2"/>',
+        'maj-19':
+          '<rect x="0" y="0" width="120" height="150" fill="#FFFBEB"/>' +
+          '<circle cx="60" cy="56" r="24" fill="#FACC15" stroke="#F59E0B" stroke-width="2"/>' +
+          '<line x1="60" y1="14" x2="60" y2="26" stroke="#F59E0B" stroke-width="2.5"/>' +
+          '<line x1="60" y1="86" x2="60" y2="98" stroke="#F59E0B" stroke-width="2.5"/>' +
+          '<line x1="18" y1="56" x2="30" y2="56" stroke="#F59E0B" stroke-width="2.5"/>' +
+          '<line x1="90" y1="56" x2="102" y2="56" stroke="#F59E0B" stroke-width="2.5"/>' +
+          '<circle cx="44" cy="116" r="8" fill="#FB923C"/>' +
+          '<circle cx="76" cy="116" r="8" fill="#FB923C"/>' +
+          '<rect x="0" y="128" width="120" height="22" fill="#86EFAC"/>',
+        'maj-20':
+          '<rect x="0" y="0" width="120" height="150" fill="#F0F9FF"/>' +
+          '<path d="M12 36 Q60 12 108 36" fill="none" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>' +
+          '<polygon points="56,34 64,34 72,62 48,62" fill="#FACC15" stroke="#B45309" stroke-width="1.5"/>' +
+          '<line x1="60" y1="62" x2="60" y2="86" stroke="#DC2626" stroke-width="2.5"/>' +
+          '<circle cx="34" cy="118" r="8" fill="#E2E8F0" stroke="#475569" stroke-width="1.5"/>' +
+          '<circle cx="60" cy="118" r="8" fill="#E2E8F0" stroke="#475569" stroke-width="1.5"/>' +
+          '<circle cx="86" cy="118" r="8" fill="#E2E8F0" stroke="#475569" stroke-width="1.5"/>',
+        'maj-21':
+          '<rect x="0" y="0" width="120" height="150" fill="#FDF4FF"/>' +
+          '<ellipse cx="60" cy="76" rx="34" ry="46" fill="none" stroke="#16A34A" stroke-width="6" stroke-dasharray="7 4"/>' +
+          '<ellipse cx="60" cy="76" rx="22" ry="32" fill="#FFFDF7" stroke="#D4AF37" stroke-width="1.5"/>' +
+          '<polygon points="60,54 64,66 76,66 66,73 70,85 60,78 50,85 54,73 44,66 56,66" fill="#FACC15"/>' +
+          '<circle cx="24" cy="24" r="5" fill="#F472B6"/>' +
+          '<circle cx="96" cy="24" r="5" fill="#60A5FA"/>' +
+          '<circle cx="24" cy="128" r="5" fill="#FBBF24"/>' +
+          '<circle cx="96" cy="128" r="5" fill="#A78BFA"/>'
       };
+      return scenes[id] || scenes['maj-0'];
     }
 
-    function buildCardArtworkHtml(card, isRev, large) {
-      const theme = getCardArtTheme(card);
-      const rotClass = isRev ? 'is-reversed' : '';
-      const mainKw = card.keywords.split('·')[0].trim();
+    function drawSuitEmblem(suitKey, x, y, scale) {
+      const s = scale || 1;
+      if (suitKey === 'Wands') {
+        return (
+          '<g transform="translate(' + x + ',' + y + ') scale(' + s + ')">' +
+            '<line x1="0" y1="-15" x2="0" y2="15" stroke="#B45309" stroke-width="3.2" stroke-linecap="round"/>' +
+            '<path d="M0 -13 C-6 -10 -5 -4 0 -6 C5 -4 6 -10 0 -13 Z" fill="#22C55E"/>' +
+            '<path d="M0 -3 C-7 0 -6 6 0 4 C7 6 8 0 0 -3 Z" fill="#16A34A"/>' +
+            '<path d="M0 7 C-6 10 -5 16 0 14 C5 16 6 10 0 7 Z" fill="#4ADE80"/>' +
+          '</g>'
+        );
+      }
+      if (suitKey === 'Cups') {
+        return (
+          '<g transform="translate(' + x + ',' + y + ') scale(' + s + ')">' +
+            '<path d="M-11 -13 L11 -13 L8 2 Q0 8 -8 2 Z" fill="#FDE047" stroke="#B45309" stroke-width="1.6"/>' +
+            '<line x1="0" y1="5" x2="0" y2="13" stroke="#B45309" stroke-width="2.2"/>' +
+            '<ellipse cx="0" cy="14" rx="8" ry="2.5" fill="#D97706"/>' +
+            '<path d="M-4 -14 Q0 -20 4 -14" fill="none" stroke="#38BDF8" stroke-width="1.6"/>' +
+          '</g>'
+        );
+      }
+      if (suitKey === 'Swords') {
+        return (
+          '<g transform="translate(' + x + ',' + y + ') scale(' + s + ')">' +
+            '<line x1="0" y1="-16" x2="0" y2="9" stroke="#64748B" stroke-width="3" stroke-linecap="round"/>' +
+            '<polygon points="0,-19 -3.5,-13 3.5,-13" fill="#94A3B8"/>' +
+            '<line x1="-9" y1="7" x2="9" y2="7" stroke="#D4AF37" stroke-width="2.8" stroke-linecap="round"/>' +
+            '<line x1="0" y1="7" x2="0" y2="15" stroke="#78350F" stroke-width="2.6" stroke-linecap="round"/>' +
+          '</g>'
+        );
+      }
       return (
-        '<div class="w-full h-full flex flex-col items-center justify-between p-1.5 text-center ' + rotClass + '" style="background:' + theme.bg + ';">' +
-          '<span class="text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-white/85" style="color:' + theme.accent + ';">' + theme.badge + '</span>' +
-          '<div class="my-auto py-0.5">' +
-            '<div class="' + (large ? 'text-2xl' : 'text-lg') + ' leading-none mb-1" style="color:' + theme.accent + ';">' + theme.symbol + '</div>' +
-            '<div class="font-display ' + (large ? 'text-sm' : 'text-xs') + ' font-bold" style="color:' + theme.accent + ';">' + card.num + '</div>' +
-            '<div class="' + (large ? 'text-xs' : 'text-[10px]') + ' font-bold text-[#2D2430] leading-tight mt-0.5">' + card.nameKo + '</div>' +
-            '<div class="' + (large ? 'text-[10px]' : 'text-[9px]') + ' text-[#6B5E70] leading-tight mt-0.5 truncate max-w-[100px] mx-auto">' + card.nameEn + '</div>' +
-          '</div>' +
-          '<span class="text-[8px] font-semibold text-[#6B5E70] truncate max-w-full">' + mainKw + '</span>' +
+        '<g transform="translate(' + x + ',' + y + ') scale(' + s + ')">' +
+          '<circle cx="0" cy="0" r="13" fill="#FACC15" stroke="#B45309" stroke-width="1.8"/>' +
+          '<polygon points="0,-8 2.4,-2.4 8,-2.4 3.5,1 5.2,6.8 0,3.4 -5.2,6.8 -3.5,1 -8,-2.4 -2.4,-2.4" fill="#15803D"/>' +
+        '</g>'
+      );
+    }
+
+    function getPipCoords(n) {
+      const map = {
+        1: [[60, 75]],
+        2: [[60, 44], [60, 106]],
+        3: [[60, 38], [60, 75], [60, 112]],
+        4: [[38, 44], [82, 44], [38, 106], [82, 106]],
+        5: [[38, 42], [82, 42], [60, 75], [38, 108], [82, 108]],
+        6: [[38, 38], [82, 38], [38, 75], [82, 75], [38, 112], [82, 112]],
+        7: [[38, 36], [82, 36], [60, 56], [38, 76], [82, 76], [38, 114], [82, 114]],
+        8: [[38, 34], [82, 34], [38, 60], [82, 60], [38, 88], [82, 88], [38, 114], [82, 114]],
+        9: [[38, 32], [82, 32], [38, 56], [82, 56], [60, 75], [38, 94], [82, 94], [38, 118], [82, 118]],
+        10: [[38, 30], [82, 30], [60, 46], [38, 62], [82, 62], [38, 88], [82, 88], [60, 104], [38, 118], [82, 118]]
+      };
+      return map[n] || map[1];
+    }
+
+    function getMinorSceneSvg(card) {
+      const isWands = card.id.includes('wands');
+      const isCups = card.id.includes('cups');
+      const isSwords = card.id.includes('swords');
+      const suitKey = isWands ? 'Wands' : isCups ? 'Cups' : isSwords ? 'Swords' : 'Pentacles';
+      const bg = isWands ? '#FFFBEB' : isCups ? '#FDF2F8' : isSwords ? '#F8FAFC' : '#F0FDF4';
+      const frameStroke = isWands ? '#D97706' : isCups ? '#DB2777' : isSwords ? '#4F46E5' : '#059669';
+
+      const parts = [
+        '<rect x="0" y="0" width="120" height="150" fill="' + bg + '"/>',
+        '<rect x="8" y="8" width="104" height="134" rx="6" fill="none" stroke="' + frameStroke + '" stroke-width="1.2" stroke-opacity="0.45"/>'
+      ];
+
+      if (card.id.endsWith('-01')) {
+        parts.push('<circle cx="60" cy="75" r="34" fill="#FFFFFF" fill-opacity="0.72" stroke="#D4AF37" stroke-width="1.5"/>');
+        parts.push(drawSuitEmblem(suitKey, 60, 75, 1.55));
+        return parts.join('');
+      }
+
+      const rankNum = parseInt(card.id.slice(-2), 10);
+      if (rankNum >= 2 && rankNum <= 10) {
+        const coords = getPipCoords(rankNum);
+        const sc = rankNum >= 8 ? 0.68 : rankNum >= 5 ? 0.78 : 0.92;
+        coords.forEach(([px, py]) => {
+          parts.push(drawSuitEmblem(suitKey, px, py, sc));
+        });
+        return parts.join('');
+      }
+
+      const isKing = card.id.endsWith('-14');
+      const isQueen = card.id.endsWith('-13');
+      const isKnight = card.id.endsWith('-12');
+      const robeColor = isKing ? '#991B1B' : isQueen ? '#9D174D' : isKnight ? '#1E40AF' : '#0F766E';
+      const capeColor = isKing ? '#FACC15' : isQueen ? '#F472B6' : isKnight ? '#60A5FA' : '#5EEAD4';
+
+      if (isKing || isQueen) {
+        parts.push('<rect x="28" y="34" width="64" height="98" rx="4" fill="#E2E8F0" stroke="#94A3B8" stroke-width="1.5"/>');
+        parts.push('<path d="M36 68 L84 68 L90 132 L30 132 Z" fill="' + robeColor + '"/>');
+        parts.push('<path d="M40 68 L80 68 L74 112 L46 112 Z" fill="' + capeColor + '" fill-opacity="0.45"/>');
+        parts.push('<circle cx="60" cy="52" r="11" fill="#FDE68A" stroke="#78350F" stroke-width="1.5"/>');
+        parts.push('<polygon points="48,42 54,28 60,38 66,28 72,42" fill="#FACC15" stroke="#B45309" stroke-width="1.2"/>');
+        parts.push(drawSuitEmblem(suitKey, 92, 92, 0.95));
+      } else {
+        parts.push('<path d="M36 66 L84 66 L90 128 L30 128 Z" fill="' + robeColor + '"/>');
+        parts.push('<path d="M36 66 L84 66 L78 96 L42 96 Z" fill="' + capeColor + '" fill-opacity="0.5"/>');
+        parts.push('<circle cx="60" cy="48" r="11" fill="#FDE68A" stroke="#78350F" stroke-width="1.5"/>');
+        parts.push('<path d="M48 44 Q60 28 74 42 L68 48 Z" fill="#F43F5E"/>');
+        parts.push(drawSuitEmblem(suitKey, 88, 96, 0.95));
+      }
+
+      return parts.join('');
+    }
+
+    function buildCardArtworkHtml(card, isRev) {
+      const rotClass = isRev ? 'is-reversed' : '';
+      const innerSvg = card.id.startsWith('maj-')
+        ? getMajorSceneSvg(card.id)
+        : getMinorSceneSvg(card);
+
+      return (
+        '<div class="tarot-art-svg-wrap ' + rotClass + '">' +
+          '<svg viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + card.nameKo + '">' +
+            innerSvg +
+          '</svg>' +
         '</div>'
       );
     }
@@ -1461,7 +1724,7 @@
             '<div onclick="app.openCardDetail(' + idx + ')" class="cursor-pointer flex flex-col items-center group">' +
               '<div class="tarot-card-face group-hover:-translate-y-1 transition">' +
                 '<div class="text-[10px] font-bold text-[#964F5B] text-center truncate">' + card.num + '</div>' +
-                '<div class="tarot-art-box">' + buildCardArtworkHtml(card, card.isReversed, false) + '</div>' +
+                '<div class="tarot-art-box">' + buildCardArtworkHtml(card, card.isReversed) + '</div>' +
                 '<div class="text-[10px] font-bold text-[#2D2430] text-center truncate">' + card.nameKo + '</div>' +
               '</div>' +
               '<span class="mt-1.5 text-xs font-bold text-[#2D2430] truncate max-w-[140px]">' + card.nameKo + '</span>' +
@@ -1499,7 +1762,7 @@
         document.getElementById('detailCardMeaning').textContent = isRev ? card.reversedMeaning : card.uprightMeaning;
 
         const frame = document.getElementById('detailCardArtFrame');
-        frame.innerHTML = buildCardArtworkHtml(card, isRev, true);
+        frame.innerHTML = buildCardArtworkHtml(card, isRev);
 
         const modal = document.getElementById('cardDetailModal');
         modal.classList.remove('hidden');
