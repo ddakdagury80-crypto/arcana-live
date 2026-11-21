@@ -83,7 +83,6 @@
       transform: scale(0.98);
     }
 
-    /* 78장 가로 부채꼴 스크롤 영역 */
     .fan-scroll-track {
       display: flex;
       align-items: center;
@@ -175,17 +174,13 @@
   </style>
 </head>
 <body>
-  <!-- 상단 토스트 알림 -->
   <div id="toastBox" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none transition-all duration-200 opacity-0 -translate-y-2">
     <div id="toastMsg" class="opal-glass px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium text-[#2D2430] shadow-lg whitespace-nowrap"></div>
   </div>
 
-  <!-- =========================================================
-       1. 로그인 전 첫 화면 (인증 퍼스트 / 카드·리딩 비노출)
-  ========================================================== -->
+  <!-- 1. 로그인 전 첫 화면 -->
   <section id="authScreen" class="min-h-dvh flex flex-col justify-between max-w-md mx-auto px-4 py-5">
     <div>
-      <!-- 모바일에서도 절대 꺾이지 않는 단일 행 헤더 -->
       <header class="opal-glass rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2 mb-6">
         <div class="flex items-center gap-2 min-w-0">
           <span class="w-8 h-8 rounded-full rose-gold-btn flex items-center justify-center text-xs font-bold shrink-0">✦</span>
@@ -201,7 +196,6 @@
         </div>
       </header>
 
-      <!-- 히어로 영역 -->
       <div class="opal-glass rounded-3xl p-5 text-center mb-4">
         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FDF4F7] border border-[#B76E79]/25 text-[11px] font-semibold text-[#964F5B] mb-3 keep-all">
           <span>✦</span>
@@ -229,7 +223,6 @@
         </div>
       </div>
 
-      <!-- 로그인 / 회원가입 카드 -->
       <div id="authCard" class="opal-glass rounded-3xl p-5">
         <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#F7F3FC] mb-4">
           <button id="tabLoginBtn" type="button" onclick="app.switchAuthMode('login')" class="py-2 rounded-xl text-xs font-bold bg-white text-[#964F5B] shadow-sm transition">
@@ -240,7 +233,6 @@
           </button>
         </div>
 
-        <!-- 이메일 로그인 폼 -->
         <form id="loginForm" onsubmit="app.handleEmailLogin(event)" class="space-y-3">
           <div>
             <label class="block text-xs font-semibold text-[#6B5E70] mb-1">이메일</label>
@@ -255,7 +247,6 @@
           </button>
         </form>
 
-        <!-- 정식 회원가입 폼 -->
         <form id="registerForm" onsubmit="app.handleRegister(event)" class="space-y-3 hidden">
           <div>
             <label class="block text-xs font-semibold text-[#6B5E70] mb-1">가입 유형</label>
@@ -284,7 +275,6 @@
             <input id="regPassword" type="password" required minlength="4" placeholder="4자리 이상 비밀번호" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#B76E79]/25 text-sm outline-none focus:border-[#B76E79]" />
           </div>
 
-          <!-- 상담사 전용 입력 필드 -->
           <div id="counselorExtraFields" class="space-y-2.5 p-3 rounded-2xl bg-[#FDFBF7] border border-[#B76E79]/20 hidden">
             <div>
               <label class="block text-[11px] font-semibold text-[#964F5B] mb-1">전문 타로 분야</label>
@@ -301,7 +291,6 @@
           </button>
         </form>
 
-        <!-- 원탭 소셜 로그인 -->
         <div class="mt-4 pt-4 border-t border-[#B76E79]/15">
           <p class="text-[11px] text-center text-[#6B5E70] mb-2.5">원탭 소셜 동의 로그인</p>
           <div class="grid grid-cols-2 gap-2">
@@ -316,7 +305,6 @@
       </div>
     </div>
 
-    <!-- 하단 대표 관리자 진입 버튼 (힌트 없음) -->
     <footer class="mt-6 pt-3 text-center">
       <button type="button" onclick="app.openAdminPinModal()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#6B5E70] hover:text-[#964F5B] transition">
         <span>👑</span>
@@ -325,11 +313,8 @@
     </footer>
   </section>
 
-  <!-- =========================================================
-       2. 로비 화면 (로그인 후 노출)
-  ========================================================== -->
+  <!-- 2. 로비 화면 -->
   <section id="lobbyView" class="hidden min-h-dvh max-w-4xl mx-auto px-4 py-4 pb-16">
-    <!-- 로비 상단바 -->
     <header class="opal-glass rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 mb-4">
       <div class="flex items-center gap-2.5 min-w-0">
         <span class="w-9 h-9 rounded-full rose-gold-btn flex items-center justify-center text-sm font-bold shrink-0">✦</span>
@@ -358,7 +343,6 @@
       </div>
     </header>
 
-    <!-- 상담사 / 유진 대표 전용 리딩룸 개설 패널 -->
     <div id="counselorRoomCreator" class="hidden opal-glass rounded-3xl p-5 mb-5">
       <div class="flex items-center justify-between gap-2 mb-3">
         <div>
@@ -391,7 +375,6 @@
             </div>
           </div>
 
-          <!-- 카드 정방향 / 정·역방향 토글 -->
           <div class="p-3 rounded-2xl bg-[#FDFBF7] border border-[#B76E79]/20 flex items-center justify-between gap-3">
             <div>
               <p class="text-xs font-bold text-[#2D2430]">카드 방향 설정</p>
@@ -433,20 +416,21 @@
       </form>
     </div>
 
-    <!-- 라이브 리딩룸 목록 -->
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-base font-bold text-[#2D2430]">✨ 실시간 1:1 타로 리딩룸</h2>
-      <span id="roomCountBadge" class="text-xs font-semibold text-[#6B5E70]"></span>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="app.refreshRoomsFromCloud(true)" class="soft-pill-btn px-2.5 py-1 rounded-lg text-[11px] font-bold">
+          새로고침
+        </button>
+        <span id="roomCountBadge" class="text-xs font-semibold text-[#6B5E70]"></span>
+      </div>
     </div>
     <div id="roomListGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
   </section>
 
-  <!-- =========================================================
-       3. 1:1 비주얼 타로 리딩룸 화면 (밝은 오팔·로즈골드 톤)
-  ========================================================== -->
+  <!-- 3. 1:1 비주얼 타로 리딩룸 화면 -->
   <section id="roomView" class="hidden min-h-dvh max-w-5xl mx-auto px-3 sm:px-5 py-4 pb-16">
     <div id="activeRoomSurface" class="rounded-3xl p-4 sm:p-6 opal-glass transition-all" style="background: linear-gradient(155deg, rgba(253,251,247,0.95), rgba(247,243,252,0.92), rgba(253,244,247,0.95));">
-      <!-- 리딩룸 상단 제어바 -->
       <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-[#B76E79]/20">
         <div class="flex items-center gap-2 min-w-0">
           <button type="button" onclick="app.exitRoomToLobby()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
@@ -471,7 +455,6 @@
         </div>
       </div>
 
-      <!-- 스프레드 모드 선택 및 정방향 모드 표시 -->
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div class="flex items-center gap-1.5 flex-wrap">
           <span class="text-xs font-semibold text-[#6B5E70] mr-1">스프레드:</span>
@@ -486,7 +469,6 @@
         </label>
       </div>
 
-      <!-- 밝은 오팔·크림 아이보리 스프레드 매트 -->
       <div class="spread-mat-bright rounded-3xl p-4 mb-5">
         <div class="flex items-center justify-between text-xs text-[#6B5E70] mb-3">
           <span id="spreadGuideText" class="font-semibold text-[#2D2430]">3장의 카드를 아래 78장 부채꼴 덱에서 선택하세요.</span>
@@ -495,7 +477,6 @@
         <div id="drawnCardsBoard" class="grid grid-cols-1 sm:grid-cols-3 gap-4 min-h-[220px] items-center justify-items-center"></div>
       </div>
 
-      <!-- 78장 풀 덱 가로 부채꼴 스프레드 -->
       <div class="mb-5">
         <div class="flex items-center justify-between px-1 mb-1">
           <span class="text-xs font-bold text-[#2D2430]">✦ 78장 라이더-웨이트-스미스 부채꼴 덱</span>
@@ -504,7 +485,6 @@
         <div id="fanDeckContainer" class="fan-scroll-track rounded-2xl bg-white/60 border border-[#B76E79]/20"></div>
       </div>
 
-      <!-- 1:1 실시간 리딩 채팅 & 후원 -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 opal-glass rounded-2xl p-4">
           <div class="flex items-center justify-between mb-2">
@@ -538,9 +518,7 @@
     </div>
   </section>
 
-  <!-- =========================================================
-       4. 소셜 원터치 동의 모달
-  ========================================================== -->
+  <!-- 4. 소셜 원터치 동의 모달 -->
   <div id="socialModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/35 backdrop-blur-xs p-4">
     <div class="opal-glass max-w-sm w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-3">
@@ -573,9 +551,7 @@
     </div>
   </div>
 
-  <!-- =========================================================
-       5. 대표 관리자 PIN 인증 모달 (PIN: 1984, 힌트 미표시)
-  ========================================================== -->
+  <!-- 5. 대표 관리자 PIN 인증 모달 -->
   <div id="adminPinModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/35 backdrop-blur-xs p-4">
     <div class="opal-glass max-w-xs w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-2">
@@ -592,9 +568,7 @@
     </div>
   </div>
 
-  <!-- =========================================================
-       6. 유진 대표 관리자 콘솔 모달
-  ========================================================== -->
+  <!-- 6. 유진 대표 관리자 콘솔 모달 -->
   <div id="adminConsoleModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-3 sm:p-5 overflow-y-auto">
     <div class="opal-glass max-w-3xl w-full rounded-3xl p-5 my-auto max-h-[90dvh] overflow-y-auto">
       <div class="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-[#B76E79]/20">
@@ -605,7 +579,6 @@
         <button type="button" onclick="app.closeAdminConsole()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-bold">닫기</button>
       </div>
 
-      <!-- KPI 요약 -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
         <div class="p-3 rounded-2xl bg-white border border-[#B76E79]/20">
           <p class="text-[11px] text-[#6B5E70]">전체 회원</p>
@@ -627,13 +600,11 @@
         </div>
       </div>
 
-      <!-- 정산 요청 승인 목록 -->
       <div class="mb-5">
         <h3 class="text-xs font-bold text-[#2D2430] mb-2">💳 상담사 정산 요청 (95.0% 지급 / 5.0% 수수료)</h3>
         <div id="settlementListBox" class="space-y-2 text-xs"></div>
       </div>
 
-      <!-- 회원 관리 및 영구 삭제 -->
       <div>
         <h3 class="text-xs font-bold text-[#2D2430] mb-2">👥 회원 목록 및 코인 관리</h3>
         <div id="adminUsersBox" class="space-y-2 text-xs"></div>
@@ -641,9 +612,7 @@
     </div>
   </div>
 
-  <!-- =========================================================
-       7. 카드 확대 해석 모달
-  ========================================================== -->
+  <!-- 7. 카드 확대 해석 모달 -->
   <div id="cardDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="opal-glass max-w-md w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-3">
@@ -663,9 +632,12 @@
   </div>
 
   <script>
-    // =========================================================
-    // 78장 라이더-웨이트-스미스 풀 덱 데이터 생성
-    // =========================================================
+    const SUPABASE_URL = 'https://bjtbsvzwlaycudlhtmmx.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_gJ-ahT5BsPfJVFW7Ad9sNw_LQ_PKA5w';
+    const supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+      : null;
+
     const MAJOR_ARCANA = [
       { id: 'maj-0', num: '0', en: 'The Fool', ko: '바보', img: 'https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg', upright: '새로운 시작, 순수한 도전, 자유로운 여정과 가능성', reversed: '무모함, 부주의, 방향 상실, 섣부른 결정' },
       { id: 'maj-1', num: 'I', en: 'The Magician', ko: '마법사', img: 'https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg', upright: '의지력, 창조적 실행력, 자원 활용, 집중과 표현', reversed: '조작, 우유부단, 재능 낭비, 기만' },
@@ -752,9 +724,6 @@
 
     const FULL_78_DECK = buildFull78Deck();
 
-    // =========================================================
-    // 상태 관리 및 스토리지
-    // =========================================================
     const STORAGE_KEY = 'arcana_live_state_v2026_11';
     const ADMIN_PIN = '1984';
 
@@ -812,6 +781,20 @@
       } catch {
         return structuredClone(DEFAULT_STATE);
       }
+    }
+
+    function normalizeRoomRow(row) {
+      return {
+        id: row.id,
+        title: row.title,
+        hostName: row.host_name || row.hostName || '타로 리더',
+        hostId: row.host_id || row.hostId || '',
+        category: row.category || '종합 타로',
+        price: Number(row.price ?? 50),
+        uprightOnly: Boolean(row.upright_only ?? row.uprightOnly),
+        bgStyle: row.bg_style || row.bgStyle || 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)',
+        bgImage: row.bg_image || row.bgImage || ''
+      };
     }
 
     const app = {
@@ -1014,6 +997,7 @@
         document.getElementById('roomView').classList.add('hidden');
         document.getElementById('lobbyView').classList.remove('hidden');
         this.renderLobby();
+        this.refreshRoomsFromCloud(false);
         this.toast(`${user.name}님, 환영합니다.`);
       },
 
@@ -1032,8 +1016,59 @@
       },
 
       // =========================================================
-      // 로비 및 상담사 방 개설
+      // Supabase rooms 테이블 공용 동기화
       // =========================================================
+      async refreshRoomsFromCloud(showNotice = false) {
+        if (!supabaseClient) return;
+        try {
+          const { data, error } = await supabaseClient
+            .from('rooms')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) {
+            if (showNotice) this.toast('방 목록 불러오기 중 오류가 발생했습니다.');
+            return;
+          }
+
+          if (Array.isArray(data) && data.length > 0) {
+            const cloudRooms = data.map(normalizeRoomRow);
+            const cloudIds = new Set(cloudRooms.map(r => r.id));
+            const localOnlyRooms = (this.state.rooms || []).filter(r => !cloudIds.has(r.id));
+            this.state.rooms = [...cloudRooms, ...localOnlyRooms];
+            this.save();
+            this.renderLobby();
+          }
+          if (showNotice) {
+            this.toast('방 목록이 최신 상태로 갱신되었습니다.');
+          }
+        } catch {
+          if (showNotice) this.toast('네트워크 상태를 확인해 주세요.');
+        }
+      },
+
+      async saveRoomToCloud(room) {
+        if (!supabaseClient) return { ok: false };
+        try {
+          const payload = {
+            id: room.id,
+            title: room.title,
+            host_name: room.hostName,
+            host_id: room.hostId,
+            category: room.category,
+            price: room.price,
+            upright_only: room.uprightOnly,
+            bg_style: room.bgStyle,
+            bg_image: room.bgImage && room.bgImage.length < 300000 ? room.bgImage : ''
+          };
+          const { error } = await supabaseClient.from('rooms').insert([payload]);
+          if (error) return { ok: false, error };
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, error };
+        }
+      },
+
       renderLobby() {
         const user = this.getCurrentUser();
         if (!user) return;
@@ -1119,7 +1154,7 @@
         reader.readAsDataURL(file);
       },
 
-      createCounselorRoom(e) {
+      async createCounselorRoom(e) {
         e.preventDefault();
         const user = this.getCurrentUser();
         if (!user) return;
@@ -1146,14 +1181,18 @@
           { sender: user.name, text: `'${title}' 리딩룸이 오픈되었습니다.`, time: '방금 전' }
         ];
         this.save();
+
+        const syncRes = await this.saveRoomToCloud(newRoom);
         document.getElementById('roomTitleInput').value = '';
-        this.toast('✨ 새 타로 상담방이 개설되었습니다.');
+
+        if (syncRes.ok) {
+          this.toast('✨ 새 타로 상담방이 개설되고 공용 DB에 동기화되었습니다.');
+        } else {
+          this.toast('✨ 새 타로 상담방이 개설되었습니다. (로컬 저장 완료)');
+        }
         this.enterRoom(newRoom.id);
       },
 
-      // =========================================================
-      // 1:1 리딩룸 및 78장 카드 부채꼴 스프레드
-      // =========================================================
       enterRoom(roomId) {
         const room = this.state.rooms.find(r => r.id === roomId);
         const user = this.getCurrentUser();
@@ -1184,6 +1223,7 @@
         document.getElementById('roomView').classList.add('hidden');
         document.getElementById('lobbyView').classList.remove('hidden');
         this.renderLobby();
+        this.refreshRoomsFromCloud(false);
       },
 
       setSpreadCount(count) {
@@ -1410,9 +1450,6 @@
         this.toast(`🪙 ${amount} MC 후원 완료 (수수료 5.0% 반영)`);
       },
 
-      // =========================================================
-      // 유진 대표 관리자 콘솔
-      // =========================================================
       openAdminConsole() {
         const modal = document.getElementById('adminConsoleModal');
         modal.classList.remove('hidden');
@@ -1524,6 +1561,7 @@
           document.getElementById('authScreen').classList.add('hidden');
           document.getElementById('lobbyView').classList.remove('hidden');
           this.renderLobby();
+          this.refreshRoomsFromCloud(false);
         }
       }
     };
