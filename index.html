@@ -176,6 +176,11 @@
         linear-gradient(135deg, rgba(253, 251, 247, 0.92), rgba(247, 243, 252, 0.88), rgba(253, 244, 247, 0.92));
       border: 1px solid rgba(183, 110, 121, 0.26);
     }
+
+    .hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
   </style>
 </head>
 <body>
@@ -364,7 +369,6 @@
       </div>
     </header>
 
-    <!-- 로비에서 바로 보이는 실시간 DB·주소 진단 바 -->
     <div id="dbStatusBar" class="opal-glass rounded-2xl px-3.5 py-2 mb-4 flex items-center justify-between gap-2 text-[11px] text-[#2D2430]">
       <span id="dbStatusText" class="font-semibold truncate">공용 DB 상태 확인 중...</span>
       <button type="button" onclick="app.refreshRoomsFromCloud(true)" class="soft-pill-btn px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#964F5B] shrink-0">
@@ -551,7 +555,7 @@
   </section>
 
   <!-- 4. 소셜 원터치 동의 모달 -->
-  <div id="socialModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/35 backdrop-blur-xs p-4">
+  <div id="socialModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="opal-glass max-w-sm w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-3">
         <h3 id="socialModalTitle" class="text-base font-bold text-[#2D2430]">소셜 원터치 로그인</h3>
@@ -584,7 +588,7 @@
   </div>
 
   <!-- 5. 대표 관리자 PIN 인증 모달 -->
-  <div id="adminPinModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/35 backdrop-blur-xs p-4">
+  <div id="adminPinModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="opal-glass max-w-xs w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-sm font-bold text-[#2D2430]">👑 유진 대표 관리자 인증</h3>
@@ -626,4 +630,1340 @@
         </div>
         <div class="p-3 rounded-2xl bg-white border border-[#B76E79]/20 flex flex-col justify-between">
           <p class="text-[11px] text-[#6B5E70]">수익 출금</p>
-          <button type="button" onclick="app.withdrawCeoRevenue()" class="mt-
+          <button type="button" onclick="app.withdrawCeoRevenue()" class="mt-1 rose-gold-btn py-1.5 rounded-lg text-[11px] font-bold">
+            전액 출금 신청
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <h3 class="text-xs font-bold text-[#2D2430] mb-2">💳 상담사 정산 요청 (95.0% 지급 / 5.0% 수수료)</h3>
+        <div id="settlementListBox" class="space-y-2 text-xs"></div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold text-[#2D2430]">👥 회원 목록 및 코인 관리</h3>
+          <button type="button" onclick="app.refreshAdminUsers()" class="soft-pill-btn px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#964F5B]">
+            회원 DB 새로고침
+          </button>
+        </div>
+        <div id="adminUsersBox" class="space-y-2 text-xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. 카드 확대 해석 모달 -->
+  <div id="cardDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+    <div class="opal-glass max-w-md w-full rounded-3xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span id="detailOrientationBadge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FDF4F7] text-[#964F5B]"></span>
+        <button type="button" onclick="app.closeCardDetailModal()" class="text-xs font-bold text-[#6B5E70] px-2 py-1">닫기</button>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4 items-center mb-4">
+        <div id="detailCardArtFrame" class="w-32 h-48 rounded-xl border-2 border-[#D4AF37] bg-[#FFFDF8] overflow-hidden shrink-0 flex items-center justify-center"></div>
+        <div class="text-center sm:text-left">
+          <p id="detailCardArcana" class="text-[11px] font-semibold text-[#B76E79]"></p>
+          <h3 id="detailCardName" class="text-lg font-bold text-[#2D2430] mb-1"></h3>
+          <p id="detailCardKeywords" class="text-xs font-semibold text-[#964F5B]"></p>
+        </div>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-white/90 border border-[#B76E79]/20 text-xs sm:text-sm text-[#2D2430] leading-relaxed keep-all" id="detailCardMeaning"></div>
+    </div>
+  </div>
+
+  <!-- 8. 스마트폰 앱 설치(홈 화면 추가) 안내 모달 -->
+  <div id="installGuideModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+    <div class="opal-glass max-w-sm w-full rounded-3xl p-5">
+      <div class="flex items-center justify-between mb-2.5">
+        <h3 class="text-base font-bold text-[#2D2430]">📲 아르카나 라이브 앱 설치</h3>
+        <button type="button" onclick="app.closeInstallGuideModal()" class="text-xs font-bold text-[#6B5E70] px-2 py-1">닫기</button>
+      </div>
+      <p class="text-xs text-[#6B5E70] leading-relaxed mb-3.5 keep-all">
+        홈 화면에 아이콘을 추가하면 주소창 없이 앱처럼 바로 실행할 수 있습니다.
+      </p>
+      <div class="space-y-2.5 text-xs text-[#2D2430] mb-4">
+        <div class="p-3 rounded-2xl bg-white/90 border border-[#B76E79]/20 keep-all">
+          <p class="font-bold text-[#964F5B] mb-1">🤖 안드로이드 (Chrome / 삼성 인터넷)</p>
+          <p class="text-[#6B5E70]">우측 상단 <strong>⋮(메뉴)</strong> → <strong>홈 화면에 추가</strong> 또는 <strong>앱 설치</strong>를 누르세요.</p>
+        </div>
+        <div class="p-3 rounded-2xl bg-white/90 border border-[#B76E79]/20 keep-all">
+          <p class="font-bold text-[#964F5B] mb-1">🍎 아이폰 / 아이패드 (Safari)</p>
+          <p class="text-[#6B5E70]">하단 <strong>공유 버튼(□↑)</strong> → 아래로 스크롤해 <strong>홈 화면에 추가</strong>를 누르세요.</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" onclick="app.copyAppLink()" class="flex-1 soft-pill-btn py-2.5 rounded-xl text-xs font-bold">
+          🔗 주소 복사
+        </button>
+        <button type="button" onclick="app.closeInstallGuideModal()" class="flex-1 rose-gold-btn py-2.5 rounded-xl text-xs font-bold">
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://bjtbsvzwlaycudlhtmmx.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_gJ-ahT5BsPfJVFW7Ad9sNw_LQ_PKA5w';
+    const supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+      : null;
+
+    function generateUuid() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function isValidUuid(str) {
+      return typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+    }
+
+    (function setupDynamicManifest() {
+      try {
+        const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#C87D88"/><stop offset="55%" stop-color="#B76E79"/><stop offset="100%" stop-color="#D4AF37"/></linearGradient></defs><rect width="192" height="192" rx="42" fill="#FDFBF7"/><circle cx="96" cy="96" r="64" fill="url(#g)"/><text x="96" y="114" text-anchor="middle" font-size="64" fill="#FFFFFF">✦</text></svg>';
+        const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon);
+
+        const appleLink = document.createElement('link');
+        appleLink.rel = 'apple-touch-icon';
+        appleLink.href = iconUrl;
+        document.head.appendChild(appleLink);
+
+        const manifest = {
+          name: '아르카나 라이브 (ARCANA LIVE)',
+          short_name: '아르카나라이브',
+          start_url: window.location.href.split('#')[0],
+          scope: './',
+          display: 'standalone',
+          background_color: '#FDFBF7',
+          theme_color: '#FDFBF7',
+          icons: [
+            { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+            { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+          ]
+        };
+        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+        const manifestUrl = URL.createObjectURL(blob);
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestUrl;
+        document.head.appendChild(manifestLink);
+      } catch (err) {}
+    })();
+
+    const COMMONS_FILEPATH = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+
+    const MAJOR_ARCANA = [
+      { id: 'maj-0', num: '0', en: 'The Fool', ko: '바보', file: 'RWS_Tarot_00_Fool.jpg', upright: '새로운 시작, 순수한 도전, 자유로운 여정과 가능성', reversed: '무모함, 부주의, 방향 상실, 섣부른 결정' },
+      { id: 'maj-1', num: 'I', en: 'The Magician', ko: '마법사', file: 'RWS_Tarot_01_Magician.jpg', upright: '의지력, 창조적 실행력, 자원 활용, 집중과 표현', reversed: '조작, 우유부단, 재능 낭비, 기만' },
+      { id: 'maj-2', num: 'II', en: 'The High Priestess', ko: '여사제', file: 'RWS_Tarot_02_High_Priestess.jpg', upright: '직관, 내면의 지혜, 신비, 비밀과 침착함', reversed: '숨겨진 동기, 직관 무시, 표면적 판단' },
+      { id: 'maj-3', num: 'III', en: 'The Empress', ko: '여황제', file: 'RWS_Tarot_03_Empress.jpg', upright: '풍요, 모성적 돌봄, 성장, 아름다움과 결실', reversed: '과보호, 정체, 창의성 막힘, 의존' },
+      { id: 'maj-4', num: 'IV', en: 'The Emperor', ko: '황제', file: 'RWS_Tarot_04_Emperor.jpg', upright: '질서, 리더십, 책임감, 구조와 안정', reversed: '독단, 경직됨, 통제 집착, 권위 충돌' },
+      { id: 'maj-5', num: 'V', en: 'The Hierophant', ko: '교황', file: 'RWS_Tarot_05_Hierophant.jpg', upright: '전통, 가르침, 멘토십, 원칙과 신뢰', reversed: '관습 탈피, 독자적 신념, 형식주의 경계' },
+      { id: 'maj-6', num: 'VI', en: 'The Lovers', ko: '연인', file: 'RWS_Tarot_06_Lovers.jpg', upright: '조화, 깊은 애정, 가치관 일치, 중요한 선택', reversed: '불균형, 갈등, 선택의 망설임, 소통 부족' },
+      { id: 'maj-7', num: 'VII', en: 'The Chariot', ko: '전차', file: 'RWS_Tarot_07_Chariot.jpg', upright: '돌파력, 승리, 목표 달성, 흔들리지 않는 추진력', reversed: '성급함, 방향 흔들림, 감정 제어 필요' },
+      { id: 'maj-8', num: 'VIII', en: 'Strength', ko: '힘', file: 'RWS_Tarot_08_Strength.jpg', upright: '부드러운 용기, 인내, 내면의 평온, 포용력', reversed: '자신감 저하, 조급함, 감정 소모' },
+      { id: 'maj-9', num: 'IX', en: 'The Hermit', ko: '은둔자', file: 'RWS_Tarot_09_Hermit.jpg', upright: '성찰, 고독 속의 깨달음, 신중함, 내면의 등불', reversed: '고립, 회피, 외로움 과다, 답답함' },
+      { id: 'maj-10', num: 'X', en: 'Wheel of Fortune', ko: '운명의 수레바퀴', file: 'RWS_Tarot_10_Wheel_of_Fortune.jpg', upright: '전환점, 행운의 흐름, 타이밍, 변화의 국면', reversed: '예상치 못한 변수, 지체, 흐름 저항' },
+      { id: 'maj-11', num: 'XI', en: 'Justice', ko: '정의', file: 'RWS_Tarot_11_Justice.jpg', upright: '공정함, 균형, 인과응보, 명확한 판단', reversed: '편파성, 불공평 느낌, 책임 회피' },
+      { id: 'maj-12', num: 'XII', en: 'The Hanged Man', ko: '매달린 사람', file: 'RWS_Tarot_12_Hanged_Man.jpg', upright: '관점 전환, 잠시 멈춤, 수용, 희생을 통한 통찰', reversed: '헛된 기다림, 희생 강요, 막힌 답답함' },
+      { id: 'maj-13', num: 'XIII', en: 'Death', ko: '죽음', file: 'RWS_Tarot_13_Death.jpg', upright: '끝과 새로운 시작, 탈피, 근본적 변화, 정리', reversed: '변화 거부, 미련, 마무리 지연' },
+      { id: 'maj-14', num: 'XIV', en: 'Temperance', ko: '절제', file: 'RWS_Tarot_14_Temperance.jpg', upright: '중용, 조율, 치유, 자연스러운 흐름', reversed: '과잉, 불균형, 조급한 타협' },
+      { id: 'maj-15', num: 'XV', en: 'The Devil', ko: '악마', file: 'RWS_Tarot_15_Devil.jpg', upright: '집착, 유혹, 속박 인식, 현실적 욕망', reversed: '속박에서 벗어남, 각성, 집착 완화' },
+      { id: 'maj-16', num: 'XVI', en: 'The Tower', ko: '탑', file: 'RWS_Tarot_16_Tower.jpg', upright: '급격한 변화, 고정관념 붕괴, 진실 드러남', reversed: '충격 완화, 내부적 동요, 변화 회피' },
+      { id: 'maj-17', num: 'XVII', en: 'The Star', ko: '별', file: 'RWS_Tarot_17_Star.jpg', upright: '희망, 영감, 치유, 맑은 비전과 믿음', reversed: '낙심, 기대 저하, 방향감 흐려짐' },
+      { id: 'maj-18', num: 'XVIII', en: 'The Moon', ko: '달', file: 'RWS_Tarot_18_Moon.jpg', upright: '무의식, 감정의 파도, 불확실성, 꿈과 직감', reversed: '오해 해소, 안개 걷힘, 불안 진정' },
+      { id: 'maj-19', num: 'XIX', en: 'The Sun', ko: '태양', file: 'RWS_Tarot_19_Sun.jpg', upright: '성공, 명랑함, 활력, 축복과 명확한 해답', reversed: '일시적 그늘, 컨디션 저하, 과신 주의' },
+      { id: 'maj-20', num: 'XX', en: 'Judgement', ko: '심판', file: 'RWS_Tarot_20_Judgement.jpg', upright: '각성, 부름, 재평가, 새로운 소명', reversed: '자기비판, 결단 미룸, 망설임' },
+      { id: 'maj-21', num: 'XXI', en: 'The World', ko: '세계', file: 'RWS_Tarot_21_World.jpg', upright: '완성, 성취, 통합, 원만한 마무리와 확장', reversed: '마무리 미완, 한 걸음 부족, 여운' }
+    ];
+
+    const SUITS = [
+      { key: 'Wands', filePrefix: 'Wands', koSuit: '완드', koElement: '불·열정·행동', uprightBase: '추진력과 열정', revBase: '에너지 소모와 지체' },
+      { key: 'Cups', filePrefix: 'Cups', koSuit: '컵', koElement: '감정·사랑·공감', uprightBase: '감정 교류와 애정', revBase: '감정 동요와 섭섭함' },
+      { key: 'Swords', filePrefix: 'Swords', koSuit: '소드', koElement: '생각·결단·진실', uprightBase: '명쾌한 판단과 소통', revBase: '말실수와 갈등 주의' },
+      { key: 'Pentacles', filePrefix: 'Pents', koSuit: '펜타클', koElement: '현실·물질·성과', uprightBase: '현실적 안정과 결실', revBase: '재정·실무 점검 필요' }
+    ];
+
+    const RANKS = [
+      { code: '01', label: 'Ace', ko: '에이스', kw: '새로운 씨앗과 기회' },
+      { code: '02', label: 'Two', ko: '2', kw: '균형과 선택의 기로' },
+      { code: '03', label: 'Three', ko: '3', kw: '협력과 초기 확장' },
+      { code: '04', label: 'Four', ko: '4', kw: '안정과 휴식·정비' },
+      { code: '05', label: 'Five', ko: '5', kw: '시련과 마찰 극복' },
+      { code: '06', label: 'Six', ko: '6', kw: '나눔과 회복·상생' },
+      { code: '07', label: 'Seven', ko: '7', kw: '인내와 전략적 방어' },
+      { code: '08', label: 'Eight', ko: '8', kw: '집중과 빠른 진행' },
+      { code: '09', label: 'Nine', ko: '9', kw: '단단한 경계와 성숙' },
+      { code: '10', label: 'Ten', ko: '10', kw: '국면의 정점과 마무리' },
+      { code: '11', label: 'Page', ko: '시종', kw: '호기심과 새로운 소식' },
+      { code: '12', label: 'Knight', ko: '기사', kw: '적극적 움직임과 돌진' },
+      { code: '13', label: 'Queen', ko: '여왕', kw: '성숙한 수용과 통찰' },
+      { code: '14', label: 'King', ko: '왕', kw: '총괄적 통솔과 확신' }
+    ];
+
+    function buildFull78Deck() {
+      const deck = MAJOR_ARCANA.map(m => ({
+        id: m.id,
+        arcana: '메이저 아르카나',
+        num: m.num,
+        nameEn: m.en,
+        nameKo: m.num + '. ' + m.ko,
+        img: COMMONS_FILEPATH + encodeURIComponent(m.file) + '?width=320',
+        keywords: m.upright.split(',').slice(0, 3).map(s => s.trim()).join(' · '),
+        uprightMeaning: m.ko + ' (' + m.en + ') 정방향: ' + m.upright + '.',
+        reversedMeaning: m.ko + ' (' + m.en + ') 역방향: ' + m.reversed + '.'
+      }));
+
+      for (const suit of SUITS) {
+        for (const rank of RANKS) {
+          const id = 'min-' + suit.key.toLowerCase() + '-' + rank.code;
+          const nameEn = rank.label + ' of ' + suit.key;
+          const nameKo = suit.koSuit + ' ' + rank.ko;
+          const fileName = suit.filePrefix + rank.code + '.jpg';
+          deck.push({
+            id: id,
+            arcana: '마이너 아르카나 (' + suit.koElement + ')',
+            num: rank.ko,
+            nameEn: nameEn,
+            nameKo: nameKo,
+            img: COMMONS_FILEPATH + encodeURIComponent(fileName) + '?width=320',
+            keywords: rank.kw + ' · ' + suit.koSuit,
+            uprightMeaning: nameKo + ' (' + nameEn + ') 정방향: ' + rank.kw + '을 바탕으로 ' + suit.uprightBase + '이 자연스럽게 이어집니다.',
+            reversedMeaning: nameKo + ' (' + nameEn + ') 역방향: ' + rank.kw + '의 흐름 속에서 ' + suit.revBase + '을 살필 시점입니다.'
+          });
+        }
+      }
+      return deck;
+    }
+
+    function buildCardArtworkHtml(card, isRev, large) {
+      const rotClass = isRev ? 'is-reversed' : '';
+      return (
+        '<img src="' + card.img + '" alt="' + card.nameKo + '" loading="eager" referrerpolicy="no-referrer" class="' + rotClass + '" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';" />' +
+        '<div class="hidden w-full h-full flex-col items-center justify-center p-2 text-center bg-gradient-to-b from-[#FFFDF8] to-[#F7F3FC]">' +
+          '<span class="font-display ' + (large ? 'text-sm' : 'text-xs') + ' font-bold text-[#964F5B]">' + card.num + '</span>' +
+          '<span class="' + (large ? 'text-xs' : 'text-[10px]') + ' font-bold text-[#2D2430] leading-tight mt-1">' + card.nameKo + '</span>' +
+          '<span class="' + (large ? 'text-[11px]' : 'text-[9px]') + ' text-[#6B5E70] leading-tight mt-0.5">' + card.nameEn + '</span>' +
+        '</div>'
+      );
+    }
+
+    const FULL_78_DECK = buildFull78Deck();
+
+    const STORAGE_KEY = 'arcana_live_state_v2026_11';
+    const ADMIN_PIN = '1984';
+
+    const DEFAULT_STATE = {
+      currentUser: null,
+      users: [
+        { id: '00000000-0000-4000-8000-000000000001', name: '유진 대표', email: 'ceo@arcanalave.kr', password: '', role: 'admin', coins: 1000, specialty: '총괄 운영', bank: '등록 완료' },
+        { id: '00000000-0000-4000-8000-000000000002', name: '루나 타로', email: 'luna@arcanalave.kr', password: '1234', role: 'counselor', coins: 350, specialty: '연애·재회·속마음', bank: '카카오뱅크 3333-01-987654 (루나)' },
+        { id: '00000000-0000-4000-8000-000000000003', name: '하늘빛 내담자', email: 'sky@arcanalave.kr', password: '1234', role: 'client', coins: 200, specialty: '', bank: '' }
+      ],
+      rooms: [
+        {
+          id: 'room-1',
+          title: '유진 대표의 오팔빛 1:1 심층 타로 살롱',
+          hostName: '유진 대표',
+          hostId: '00000000-0000-4000-8000-000000000001',
+          category: '종합 타로',
+          price: 50,
+          uprightOnly: false,
+          bgStyle: 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)',
+          bgImage: ''
+        },
+        {
+          id: 'room-2',
+          title: '루나 타로의 정방향 로즈골드 연애 리딩',
+          hostName: '루나 타로',
+          hostId: '00000000-0000-4000-8000-000000000002',
+          category: '연애·재회',
+          price: 40,
+          uprightOnly: true,
+          bgStyle: 'linear-gradient(135deg, #FDF4F7 0%, #FFFDF9 55%, #F7F3FC 100%)',
+          bgImage: ''
+        }
+      ],
+      ceoRevenueCoins: 120,
+      settlements: [
+        { id: 'st-1', counselorName: '루나 타로', grossCoins: 200, feeRate: 0.05, netCoins: 190, status: 'pending' }
+      ],
+      chats: {
+        'room-1': [
+          { sender: '유진 대표', text: '어서 오세요. 궁금하신 질문을 남기고 78장 부채꼴 덱에서 카드를 선택해 보세요.', time: '방금 전' }
+        ],
+        'room-2': [
+          { sender: '루나 타로', text: '정방향 전용 모드로 진행되는 연애·속마음 리딩룸입니다.', time: '방금 전' }
+        ]
+      }
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_STATE);
+        const parsed = JSON.parse(raw);
+        return { ...structuredClone(DEFAULT_STATE), ...parsed };
+      } catch (err) {
+        return structuredClone(DEFAULT_STATE);
+      }
+    }
+
+    function normalizeRoomRow(row) {
+      return {
+        id: row.id,
+        title: row.title,
+        hostName: row.host_name || row.hostName || '타로 리더',
+        hostId: row.host_id || row.hostId || '',
+        category: row.category || '종합 타로',
+        price: Number(row.price ?? 50),
+        uprightOnly: Boolean(row.upright_only ?? row.uprightOnly),
+        bgStyle: row.bg_style || row.bgStyle || 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)',
+        bgImage: row.bg_image || row.bgImage || ''
+      };
+    }
+
+    const app = {
+      state: loadState(),
+      registerRole: 'client',
+      socialProvider: 'kakao',
+      selectedBgStyle: 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)',
+      selectedBgImage: '',
+      currentRoomId: null,
+      spreadCount: 3,
+      drawnCards: [],
+      availableDeck: [],
+      deferredInstallPrompt: null,
+      roomsChannel: null,
+      dbStatusSummary: '확인 전',
+      _ptrStartY: 0,
+      _ptrPulling: false,
+      _ptrReady: false,
+
+      save() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+      },
+
+      setDbStatus(msg) {
+        this.dbStatusSummary = msg;
+        const el = document.getElementById('dbStatusText');
+        if (el) el.textContent = msg;
+      },
+
+      toast(msg) {
+        const box = document.getElementById('toastBox');
+        const txt = document.getElementById('toastMsg');
+        txt.textContent = msg;
+        box.classList.remove('opacity-0', '-translate-y-2');
+        box.classList.add('opacity-100', 'translate-y-0');
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+          box.classList.remove('opacity-100', 'translate-y-0');
+          box.classList.add('opacity-0', '-translate-y-2');
+        }, 2600);
+      },
+
+      isStandaloneMode() {
+        return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      },
+
+      openInstallGuideModal() {
+        const modal = document.getElementById('installGuideModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      },
+
+      closeInstallGuideModal() {
+        const modal = document.getElementById('installGuideModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      },
+
+      async triggerAppInstall() {
+        if (this.isStandaloneMode()) {
+          this.toast('이미 앱(홈 화면)으로 실행 중입니다.');
+          return;
+        }
+        if (this.deferredInstallPrompt) {
+          this.deferredInstallPrompt.prompt();
+          const { outcome } = await this.deferredInstallPrompt.userChoice;
+          this.deferredInstallPrompt = null;
+          if (outcome === 'accepted') {
+            this.toast('📲 아르카나 라이브 앱 설치가 시작되었습니다.');
+          } else {
+            this.openInstallGuideModal();
+          }
+          return;
+        }
+        this.openInstallGuideModal();
+      },
+
+      copyAppLink() {
+        const url = window.location.href.startsWith('http')
+          ? window.location.href
+          : 'https://majestic-swan-9cefb4.netlify.app';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).catch(() => {});
+        }
+        this.toast("✨ '아르카나 라이브 링크' 주소가 복사되었습니다");
+      },
+
+      openAuthTab(mode) {
+        this.switchAuthMode(mode);
+        document.getElementById('authCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      },
+
+      switchAuthMode(mode) {
+        const isLogin = mode === 'login';
+        document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
+        document.getElementById('registerForm').classList.toggle('hidden', isLogin);
+        document.getElementById('tabLoginBtn').className = isLogin
+          ? 'py-2 rounded-xl text-xs font-bold bg-white text-[#964F5B] shadow-sm transition'
+          : 'py-2 rounded-xl text-xs font-bold text-[#6B5E70] transition';
+        document.getElementById('tabRegisterBtn').className = !isLogin
+          ? 'py-2 rounded-xl text-xs font-bold bg-white text-[#964F5B] shadow-sm transition'
+          : 'py-2 rounded-xl text-xs font-bold text-[#6B5E70] transition';
+      },
+
+      selectRegisterRole(role) {
+        this.registerRole = role;
+        const isCounselor = role === 'counselor';
+        document.getElementById('counselorExtraFields').classList.toggle('hidden', !isCounselor);
+        document.getElementById('roleClientBtn').className = !isCounselor
+          ? 'py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79] bg-[#FDF4F7] text-[#964F5B]'
+          : 'py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79]/25 bg-white text-[#6B5E70]';
+        document.getElementById('roleCounselorBtn').className = isCounselor
+          ? 'py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79] bg-[#FDF4F7] text-[#964F5B]'
+          : 'py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79]/25 bg-white text-[#6B5E70]';
+      },
+
+      async handleEmailLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+        const pw = document.getElementById('loginPassword').value.trim();
+
+        await this.loadUsersFromCloud();
+        const found = this.state.users.find(u => (u.email || '').toLowerCase() === email);
+        if (!found) {
+          this.toast('등록된 이메일이 없습니다. 정식 회원가입을 먼저 진행해 주세요.');
+          return;
+        }
+        if (found.password && found.password !== pw) {
+          this.toast('비밀번호를 다시 확인해 주세요.');
+          return;
+        }
+        this.loginAsUser(found);
+      },
+
+      async handleRegister(e) {
+        e.preventDefault();
+        const nickname = document.getElementById('regNickname').value.trim();
+        const email = document.getElementById('regEmail').value.trim().toLowerCase();
+        const pw = document.getElementById('regPassword').value.trim();
+        const specialty = document.getElementById('regSpecialty').value.trim() || '종합 타로';
+        const bank = document.getElementById('regBank').value.trim() || '정산 계좌 등록 예정';
+
+        if (!nickname || !email || !pw) return;
+
+        const existing = this.state.users.find(u => (u.email || '').toLowerCase() === email);
+        if (existing) {
+          this.toast('이미 가입된 이메일입니다. 로그인해 주세요.');
+          this.switchAuthMode('login');
+          document.getElementById('loginEmail').value = email;
+          return;
+        }
+
+        const newUser = {
+          id: generateUuid(),
+          name: nickname,
+          email,
+          password: pw,
+          role: this.registerRole,
+          coins: 150,
+          specialty: this.registerRole === 'counselor' ? specialty : '',
+          bank: this.registerRole === 'counselor' ? bank : ''
+        };
+
+        this.state.users.push(newUser);
+        this.save();
+        await this.syncUserToCloud(newUser);
+        this.toast('✨ ' + nickname + '님, 아르카나 라이브 회원가입이 완료되었습니다.');
+        this.loginAsUser(newUser);
+      },
+
+      openSocialModal(provider) {
+        this.socialProvider = provider;
+        document.getElementById('socialModalTitle').textContent =
+          provider === 'kakao' ? '💛 카카오 원터치 로그인' : '🔴 구글 원터치 로그인';
+        const modal = document.getElementById('socialModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      },
+
+      closeSocialModal() {
+        const modal = document.getElementById('socialModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      },
+
+      async confirmSocialLogin() {
+        const agreed = document.getElementById('socialAgreeCheck').checked;
+        if (!agreed) {
+          this.toast('필수 약관 동의 후 진행할 수 있습니다.');
+          return;
+        }
+        const nick = document.getElementById('socialNicknameInput').value.trim() || '오팔내담자';
+        const role = document.getElementById('socialRoleSelect').value;
+        const email = this.socialProvider + '_' + Date.now() + '@social.arcanalave.kr';
+
+        const user = {
+          id: generateUuid(),
+          name: nick,
+          email,
+          password: '',
+          role,
+          coins: 150,
+          specialty: role === 'counselor' ? '연애·속마음·운세' : '',
+          bank: role === 'counselor' ? '소셜 간편 정산 등록' : ''
+        };
+
+        this.state.users.push(user);
+        this.save();
+        await this.syncUserToCloud(user);
+        this.closeSocialModal();
+        this.loginAsUser(user);
+      },
+
+      openAdminPinModal() {
+        document.getElementById('adminPinInput').value = '';
+        const modal = document.getElementById('adminPinModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      },
+
+      closeAdminPinModal() {
+        const modal = document.getElementById('adminPinModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      },
+
+      async verifyAdminPin(e) {
+        e.preventDefault();
+        const pin = document.getElementById('adminPinInput').value.trim();
+        if (pin !== ADMIN_PIN) {
+          this.toast('관리자 PIN 번호가 일치하지 않습니다.');
+          return;
+        }
+        this.closeAdminPinModal();
+        const ceo = this.state.users.find(u => u.role === 'admin') || {
+          id: '00000000-0000-4000-8000-000000000001',
+          name: '유진 대표',
+          email: 'ceo@arcanalave.kr',
+          role: 'admin',
+          coins: 1000
+        };
+        this.loginAsUser(ceo);
+        await this.openAdminConsole();
+      },
+
+      loginAsUser(user) {
+        this.state.currentUser = user.id;
+        this.save();
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('roomView').classList.add('hidden');
+        document.getElementById('lobbyView').classList.remove('hidden');
+        this.renderLobby();
+        this.refreshRoomsFromCloud(false);
+        this.subscribeRoomsRealtime();
+        this.toast(user.name + '님, 환영합니다.');
+      },
+
+      logout() {
+        this.state.currentUser = null;
+        this.currentRoomId = null;
+        this.save();
+        document.getElementById('lobbyView').classList.add('hidden');
+        document.getElementById('roomView').classList.add('hidden');
+        document.getElementById('authScreen').classList.remove('hidden');
+        this.toast('로그아웃되었습니다.');
+      },
+
+      getCurrentUser() {
+        return this.state.users.find(u => u.id === this.state.currentUser) || null;
+      },
+
+      async syncUserToCloud(user) {
+        if (!supabaseClient || !user) return;
+        try {
+          const dbId = isValidUuid(user.id) ? user.id : generateUuid();
+          if (dbId !== user.id) {
+            const oldId = user.id;
+            user.id = dbId;
+            if (this.state.currentUser === oldId) this.state.currentUser = dbId;
+            this.save();
+          }
+          await supabaseClient.from('profiles').upsert([{
+            id: dbId,
+            email: user.email || (dbId + '@arcanalave.kr'),
+            nickname: user.name,
+            role: user.role || 'client',
+            coins: Number(user.coins ?? 150),
+            specialty: user.specialty || '',
+            bank: user.bank || ''
+          }], { onConflict: 'id' });
+        } catch (err) {}
+      },
+
+      async loadUsersFromCloud() {
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient.from('profiles').select('*');
+            if (!error && Array.isArray(data) && data.length > 0) {
+              const map = new Map(this.state.users.map(u => [u.id, u]));
+              data.forEach(row => {
+                const id = row.id;
+                const name = row.nickname || row.name || (row.email ? row.email.split('@')[0] : '회원');
+                const existing = map.get(id) || {};
+                const inferredRole = row.role || existing.role || (name.includes('유진') ? 'admin' : 'client');
+                map.set(id, {
+                  id,
+                  name,
+                  email: row.email || existing.email || '',
+                  password: existing.password || '',
+                  role: inferredRole,
+                  coins: Number(row.coins ?? existing.coins ?? 150),
+                  specialty: row.specialty || existing.specialty || '',
+                  bank: row.bank || existing.bank || ''
+                });
+              });
+              this.state.users = Array.from(map.values());
+            }
+          } catch (err) {}
+        }
+
+        (this.state.rooms || []).forEach(room => {
+          const hostName = (room.hostName || '').trim();
+          if (!hostName) return;
+          const alreadyExists = this.state.users.some(u =>
+            (room.hostId && u.id === room.hostId) || u.name === hostName
+          );
+          if (!alreadyExists) {
+            const recoveredUser = {
+              id: isValidUuid(room.hostId) ? room.hostId : generateUuid(),
+              name: hostName,
+              email: 'counselor_' + Date.now().toString().slice(-4) + '@arcanalave.kr',
+              password: '',
+              role: 'counselor',
+              coins: 150,
+              specialty: room.category || '종합 타로',
+              bank: '정산 계좌 등록 예정'
+            };
+            this.state.users.push(recoveredUser);
+            this.syncUserToCloud(recoveredUser);
+          }
+        });
+
+        this.save();
+      },
+
+      subscribeRoomsRealtime() {
+        if (!supabaseClient || this.roomsChannel) return;
+        try {
+          this.roomsChannel = supabaseClient
+            .channel('rooms-realtime-channel')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'rooms' },
+              (payload) => {
+                if (payload.eventType === 'INSERT' && payload.new) {
+                  const incoming = normalizeRoomRow(payload.new);
+                  const exists = this.state.rooms.some(r => r.id === incoming.id);
+                  if (!exists) {
+                    this.state.rooms.unshift(incoming);
+                    if (!this.state.chats[incoming.id]) {
+                      this.state.chats[incoming.id] = [
+                        { sender: incoming.hostName, text: "'" + incoming.title + "' 리딩룸이 오픈되었습니다.", time: '방금 전' }
+                      ];
+                    }
+                    this.save();
+                    if (!document.getElementById('lobbyView').classList.contains('hidden')) {
+                      this.renderLobby();
+                    }
+                    this.toast("✨ 새 상담실 '" + incoming.title + "'이 열렸습니다.");
+                  }
+                } else if (payload.eventType === 'UPDATE' && payload.new) {
+                  const updated = normalizeRoomRow(payload.new);
+                  this.state.rooms = this.state.rooms.map(r => (r.id === updated.id ? { ...r, ...updated } : r));
+                  this.save();
+                  if (!document.getElementById('lobbyView').classList.contains('hidden')) {
+                    this.renderLobby();
+                  }
+                } else if (payload.eventType === 'DELETE' && payload.old && payload.old.id) {
+                  this.state.rooms = this.state.rooms.filter(r => r.id !== payload.old.id);
+                  this.save();
+                  if (!document.getElementById('lobbyView').classList.contains('hidden')) {
+                    this.renderLobby();
+                  }
+                }
+              }
+            )
+            .subscribe();
+        } catch (err) {}
+      },
+
+      async refreshRoomsFromCloud(showNotice = false) {
+        const hostName = window.location.hostname || 'local';
+        if (!supabaseClient) {
+          this.setDbStatus('[' + hostName + '] ❌ Supabase 미연결');
+          this.renderLobby();
+          if (showNotice) this.toast(this.dbStatusSummary);
+          return;
+        }
+        try {
+          const { data, error } = await supabaseClient
+            .from('rooms')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) {
+            this.setDbStatus('[' + hostName + '] ❌ 조회오류: ' + error.message);
+            this.renderLobby();
+            if (showNotice) this.toast(this.dbStatusSummary);
+            return;
+          }
+
+          const rows = Array.isArray(data) ? data : [];
+          const cloudRooms = rows.map(normalizeRoomRow);
+          const cloudIds = new Set(cloudRooms.map(r => r.id));
+          const localOnlyRooms = (this.state.rooms || []).filter(r => !cloudIds.has(r.id));
+          this.state.rooms = [...cloudRooms, ...localOnlyRooms];
+          this.save();
+          this.setDbStatus('[' + hostName + '] ✅ 공용DB 방 ' + rows.length + '개');
+          this.renderLobby();
+
+          if (showNotice) {
+            this.toast('[' + hostName + '] 공용 DB 방 ' + rows.length + '개 확인 완료');
+          }
+        } catch (err) {
+          this.setDbStatus('[' + hostName + '] ❌ 통신오류: ' + (err.message || err));
+          if (showNotice) this.toast(this.dbStatusSummary);
+        }
+      },
+
+      setupPullToRefresh() {
+        const ptrBox = document.getElementById('ptrIndicator');
+        const ptrIcon = document.getElementById('ptrIcon');
+        const ptrText = document.getElementById('ptrText');
+        const lobbyEl = document.getElementById('lobbyView');
+        const threshold = 78;
+
+        const resetPtr = () => {
+          this._ptrPulling = false;
+          this._ptrReady = false;
+          if (lobbyEl) lobbyEl.style.transform = '';
+          if (ptrBox) {
+            ptrBox.classList.add('opacity-0', '-translate-y-4');
+            ptrBox.classList.remove('opacity-100', 'translate-y-0');
+          }
+        };
+
+        window.addEventListener('touchstart', (e) => {
+          if (!lobbyEl || lobbyEl.classList.contains('hidden')) return;
+          if (window.scrollY > 4) return;
+          if (!e.touches || e.touches.length !== 1) return;
+          this._ptrStartY = e.touches[0].clientY;
+          this._ptrPulling = true;
+          this._ptrReady = false;
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+          if (!this._ptrPulling || !lobbyEl || lobbyEl.classList.contains('hidden')) return;
+          if (window.scrollY > 4) {
+            resetPtr();
+            return;
+          }
+          const dy = e.touches[0].clientY - this._ptrStartY;
+          if (dy <= 8) return;
+
+          const pull = Math.min(110, dy * 0.55);
+          lobbyEl.style.transform = 'translateY(' + Math.round(pull) + 'px)';
+          ptrBox.classList.remove('opacity-0', '-translate-y-4');
+          ptrBox.classList.add('opacity-100', 'translate-y-0');
+
+          if (dy >= threshold) {
+            this._ptrReady = true;
+            ptrIcon.textContent = '↻';
+            ptrText.textContent = '놓으면 상담실 새로고침';
+          } else {
+            this._ptrReady = false;
+            ptrIcon.textContent = '↓';
+            ptrText.textContent = '당겨서 새 상담실 확인';
+          }
+        }, { passive: true });
+
+        window.addEventListener('touchend', async () => {
+          if (!this._ptrPulling) return;
+          const shouldRefresh = this._ptrReady;
+          resetPtr();
+          if (shouldRefresh) {
+            await this.refreshRoomsFromCloud(true);
+          }
+        }, { passive: true });
+      },
+
+      async saveRoomToCloud(room) {
+        const hostName = window.location.hostname || 'local';
+        if (!supabaseClient) {
+          this.setDbStatus('[' + hostName + '] ❌ Supabase 미연결');
+          return { ok: false };
+        }
+        try {
+          const safeBgImage = (room.bgImage && room.bgImage.length < 250000) ? room.bgImage : '';
+          const payload = {
+            id: room.id,
+            title: room.title,
+            host_name: room.hostName,
+            host_id: room.hostId,
+            category: room.category,
+            price: room.price,
+            upright_only: room.uprightOnly,
+            bg_style: room.bgStyle,
+            bg_image: safeBgImage
+          };
+          const { error } = await supabaseClient.from('rooms').insert([payload]);
+          if (error) {
+            this.setDbStatus('[' + hostName + '] ❌ 저장오류: ' + error.message);
+            return { ok: false, error };
+          }
+          await this.refreshRoomsFromCloud(false);
+          return { ok: true };
+        } catch (error) {
+          this.setDbStatus('[' + hostName + '] ❌ 전송예외: ' + (error.message || error));
+          return { ok: false, error };
+        }
+      },
+
+      renderLobby() {
+        const user = this.getCurrentUser();
+        if (!user) return;
+
+        const roleLabel =
+          user.role === 'admin' ? '👑 유진 대표' :
+          user.role === 'counselor' ? '🎙️ 타로 상담사' : '🙋 일반 내담자';
+
+        document.getElementById('lobbyRoleBadge').textContent = roleLabel;
+        document.getElementById('lobbyUserSummary').textContent = user.name + ' · ' + user.email;
+        document.getElementById('lobbyCoinBalance').textContent = user.coins;
+        document.getElementById('dbStatusText').textContent = this.dbStatusSummary;
+
+        const canCreateRoom = user.role === 'counselor' || user.role === 'admin';
+        document.getElementById('counselorRoomCreator').classList.toggle('hidden', !canCreateRoom);
+        document.getElementById('lobbyAdminConsoleBtn').classList.toggle('hidden', user.role !== 'admin');
+
+        document.getElementById('roomCountBadge').textContent = '총 ' + this.state.rooms.length + '개 방 운영중';
+        const grid = document.getElementById('roomListGrid');
+        grid.innerHTML = this.state.rooms.map(room => {
+          const bgCss = room.bgImage
+            ? 'background-image: linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.88)), url(\'' + room.bgImage + '\'); background-size: cover; background-position: center;'
+            : 'background: ' + room.bgStyle + ';';
+
+          return (
+            '<div class="opal-glass rounded-3xl p-4 flex flex-col justify-between" style="' + bgCss + '">' +
+              '<div>' +
+                '<div class="flex items-center justify-between gap-2 mb-2">' +
+                  '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/90 text-[#964F5B] border border-[#B76E79]/25">' + room.category + '</span>' +
+                  '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FFFDF7] text-[#2D2430] border border-[#D4AF37]/40">🪙 ' + room.price + ' MC</span>' +
+                '</div>' +
+                '<h3 class="text-sm sm:text-base font-bold text-[#2D2430] mb-1 keep-all">' + room.title + '</h3>' +
+                '<p class="text-xs text-[#6B5E70] mb-3">리더: <strong class="text-[#2D2430]">' + room.hostName + '</strong> · ' + (room.uprightOnly ? '정방향 전용 모드' : '정·역방향 모드') + '</p>' +
+              '</div>' +
+              '<button type="button" onclick="app.enterRoom(\'' + room.id + '\')" class="w-full rose-gold-btn py-2.5 rounded-xl text-xs font-bold">1:1 타로 상담방 입장하기</button>' +
+            '</div>'
+          );
+        }).join('');
+      },
+
+      updateUprightToggleLabel() {
+        const checked = document.getElementById('roomUprightOnlyToggle').checked;
+        document.getElementById('roomUprightHint').textContent = checked
+          ? '현재: 정방향만 보기 (역방향 미출현)'
+          : '현재: 정·역방향 모두 사용';
+      },
+
+      selectRoomPreset(preset) {
+        this.selectedBgImage = '';
+        if (preset === 'opal') {
+          this.selectedBgStyle = 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)';
+        } else if (preset === 'lavender') {
+          this.selectedBgStyle = 'linear-gradient(135deg, #F7F3FC 0%, #FDFBF7 60%, #EDE7FA 100%)';
+        } else {
+          this.selectedBgStyle = 'linear-gradient(135deg, #FDF4F7 0%, #FFFDF9 55%, #FCE8EE 100%)';
+        }
+        const box = document.getElementById('roomBgPreviewBox');
+        box.style.backgroundImage = 'none';
+        box.style.background = this.selectedBgStyle;
+        box.textContent = '선택된 밝은 배경 프리셋 적용됨';
+      },
+
+      handleRoomBgUpload(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.selectedBgImage = reader.result;
+          const box = document.getElementById('roomBgPreviewBox');
+          box.style.backgroundImage = 'url(\'' + this.selectedBgImage + '\')';
+          box.style.backgroundSize = 'cover';
+          box.style.backgroundPosition = 'center';
+          box.textContent = '';
+          this.toast('방 배경 사진이 업로드되었습니다.');
+        };
+        reader.readAsDataURL(file);
+      },
+
+      async createCounselorRoom(e) {
+        e.preventDefault();
+        const user = this.getCurrentUser();
+        if (!user) return;
+
+        await this.syncUserToCloud(user);
+
+        const title = document.getElementById('roomTitleInput').value.trim();
+        const category = document.getElementById('roomCategoryInput').value;
+        const price = Math.max(10, Number(document.getElementById('roomPriceInput').value) || 50);
+        const uprightOnly = document.getElementById('roomUprightOnlyToggle').checked;
+
+        const newRoom = {
+          id: 'room-' + Date.now(),
+          title,
+          hostName: user.name,
+          hostId: user.id,
+          category,
+          price,
+          uprightOnly,
+          bgStyle: this.selectedBgStyle,
+          bgImage: this.selectedBgImage
+        };
+
+        this.state.rooms.unshift(newRoom);
+        this.state.chats[newRoom.id] = [
+          { sender: user.name, text: '\'' + title + '\' 리딩룸이 오픈되었습니다.', time: '방금 전' }
+        ];
+        this.save();
+
+        const syncRes = await this.saveRoomToCloud(newRoom);
+        document.getElementById('roomTitleInput').value = '';
+
+        if (syncRes.ok) {
+          this.toast('✨ 새 타로 상담방이 개설되고 공용 DB에 동기화되었습니다.');
+        } else {
+          this.toast('✨ 로컬 저장 완료 · ' + this.dbStatusSummary);
+        }
+        this.enterRoom(newRoom.id);
+      },
+
+      enterRoom(roomId) {
+        const room = this.state.rooms.find(r => r.id === roomId);
+        const user = this.getCurrentUser();
+        if (!room || !user) return;
+
+        this.currentRoomId = room.id;
+        document.getElementById('lobbyView').classList.add('hidden');
+        document.getElementById('roomView').classList.remove('hidden');
+
+        document.getElementById('currentRoomTitle').textContent = room.title;
+        document.getElementById('currentRoomMeta').textContent = '리더: ' + room.hostName + ' · ' + room.category + ' · ' + room.price + ' MC';
+        document.getElementById('roomCoinBalance').textContent = user.coins;
+        document.getElementById('roomLiveUprightOnly').checked = !!room.uprightOnly;
+
+        const surface = document.getElementById('activeRoomSurface');
+        if (room.bgImage) {
+          surface.style.background = 'linear-gradient(155deg, rgba(253,251,247,0.88), rgba(247,243,252,0.86), rgba(253,244,247,0.88)), url(\'' + room.bgImage + '\') center/cover no-repeat';
+        } else {
+          surface.style.background = room.bgStyle || 'linear-gradient(155deg, rgba(253,251,247,0.95), rgba(247,243,252,0.92), rgba(253,244,247,0.95))';
+        }
+
+        this.shuffleAndSpreadDeck();
+        this.renderChat();
+      },
+
+      exitRoomToLobby() {
+        this.currentRoomId = null;
+        document.getElementById('roomView').classList.add('hidden');
+        document.getElementById('lobbyView').classList.remove('hidden');
+        this.renderLobby();
+        this.refreshRoomsFromCloud(false);
+        this.subscribeRoomsRealtime();
+      },
+
+      setSpreadCount(count) {
+        this.spreadCount = count;
+        document.querySelectorAll('.spread-mode-btn').forEach(btn => {
+          const active = Number(btn.dataset.spread) === count;
+          btn.className = active
+            ? 'spread-mode-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-[#B76E79] bg-[#FDF4F7] text-[#964F5B]'
+            : 'spread-mode-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-[#B76E79]/25 bg-white text-[#2D2430]';
+        });
+        this.clearBoard();
+      },
+
+      toggleLiveUprightOnly(checked) {
+        const room = this.state.rooms.find(r => r.id === this.currentRoomId);
+        if (room) {
+          room.uprightOnly = checked;
+          this.save();
+        }
+        this.toast(checked ? '정방향만 보기로 설정되었습니다.' : '정·역방향 모두 포함으로 설정되었습니다.');
+      },
+
+      shuffleAndSpreadDeck() {
+        this.availableDeck = [...FULL_78_DECK];
+        for (let i = this.availableDeck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const tmp = this.availableDeck[i];
+          this.availableDeck[i] = this.availableDeck[j];
+          this.availableDeck[j] = tmp;
+        }
+        this.drawnCards = [];
+        this.renderBoard();
+        this.renderFanDeck();
+      },
+
+      clearBoard() {
+        this.drawnCards = [];
+        this.renderBoard();
+      },
+
+      pickCardFromFan(cardId) {
+        if (this.drawnCards.length >= this.spreadCount) {
+          this.toast('이번 스프레드는 최대 ' + this.spreadCount + '장까지 뽑을 수 있습니다.');
+          return;
+        }
+        const idx = this.availableDeck.findIndex(c => c.id === cardId);
+        if (idx === -1) return;
+        const [card] = this.availableDeck.splice(idx, 1);
+
+        const room = this.state.rooms.find(r => r.id === this.currentRoomId);
+        const uprightOnly = room ? !!room.uprightOnly : false;
+        const isReversed = uprightOnly ? false : Math.random() < 0.35;
+
+        this.drawnCards.push({
+          ...card,
+          isReversed
+        });
+
+        this.renderBoard();
+        this.renderFanDeck();
+      },
+
+      renderBoard() {
+        const board = document.getElementById('drawnCardsBoard');
+        document.getElementById('remainingDeckCount').textContent = '남은 카드: ' + this.availableDeck.length + '장';
+        document.getElementById('spreadGuideText').textContent =
+          this.spreadCount + '장 스프레드 (' + this.drawnCards.length + '/' + this.spreadCount + '장 선택됨)';
+
+        const colsClass =
+          this.spreadCount === 1 ? 'grid-cols-1' :
+          this.spreadCount === 5 ? 'grid-cols-2 sm:grid-cols-5' :
+          'grid-cols-1 sm:grid-cols-3';
+        board.className = 'grid ' + colsClass + ' gap-4 min-h-[235px] items-center justify-items-center';
+
+        if (this.drawnCards.length === 0) {
+          board.innerHTML =
+            '<div class="col-span-full text-center py-8 px-4">' +
+              '<p class="text-xs sm:text-sm font-semibold text-[#6B5E70]">아래 78장 라이더-웨이트 부채꼴 덱에서 카드를 눌러 스프레드 매트에 올려보세요.</p>' +
+            '</div>';
+          return;
+        }
+
+        board.innerHTML = this.drawnCards.map((card, idx) => {
+          const dirLabel = card.isReversed ? '역방향' : '정방향';
+          return (
+            '<div onclick="app.openCardDetail(' + idx + ')" class="cursor-pointer flex flex-col items-center group">' +
+              '<div class="tarot-card-face group-hover:-translate-y-1 transition">' +
+                '<div class="text-[10px] font-bold text-[#964F5B] text-center truncate">' + card.num + '</div>' +
+                '<div class="tarot-art-box">' + buildCardArtworkHtml(card, card.isReversed, false) + '</div>' +
+                '<div class="text-[10px] font-bold text-[#2D2430] text-center truncate">' + card.nameKo + '</div>' +
+              '</div>' +
+              '<span class="mt-1.5 text-xs font-bold text-[#2D2430] truncate max-w-[140px]">' + card.nameKo + '</span>' +
+              '<span class="text-[11px] font-semibold ' + (card.isReversed ? 'text-[#B76E79]' : 'text-[#6B5E70]') + '">' + dirLabel + '</span>' +
+            '</div>'
+          );
+        }).join('');
+      },
+
+      renderFanDeck() {
+        const container = document.getElementById('fanDeckContainer');
+        container.innerHTML = this.availableDeck.map((card, idx) => {
+          const tilt = ((idx % 7) - 3) * 1.4;
+          return (
+            '<div class="fan-card-slot" style="transform: rotate(' + tilt + 'deg);">' +
+              '<div onclick="app.pickCardFromFan(\'' + card.id + '\')" title="카드 선택" class="tarot-card-back">' +
+                '<div class="w-16 h-28 rounded-lg border border-[#B76E79]/45 flex flex-col items-center justify-center bg-white/70">' +
+                  '<span class="font-display text-base text-[#D4AF37]">✦</span>' +
+                  '<span class="font-display text-[9px] tracking-widest text-[#964F5B] font-semibold mt-1">ARCANA</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+      },
+
+      openCardDetail(index) {
+        const card = this.drawnCards[index];
+        if (!card) return;
+        const isRev = !!card.isReversed;
+        document.getElementById('detailOrientationBadge').textContent = isRev ? '↻ 역방향 (Reversed)' : '↑ 정방향 (Upright)';
+        document.getElementById('detailCardArcana').textContent = card.arcana + ' · ' + card.nameEn;
+        document.getElementById('detailCardName').textContent = card.nameKo;
+        document.getElementById('detailCardKeywords').textContent = card.keywords;
+        document.getElementById('detailCardMeaning').textContent = isRev ? card.reversedMeaning : card.uprightMeaning;
+
+        const frame = document.getElementById('detailCardArtFrame');
+        frame.innerHTML = buildCardArtworkHtml(card, isRev, true);
+
+        const modal = document.getElementById('cardDetailModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      },
+
+      closeCardDetailModal() {
+        const modal = document.getElementById('cardDetailModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      },
+
+      renderChat() {
+        const box = document.getElementById('chatLogBox');
+        const list = this.state.chats[this.currentRoomId] || [];
+        box.innerHTML = list.map(m => (
+          '<div class="p-2 rounded-xl bg-white border border-[#B76E79]/15">' +
+            '<div class="flex items-center justify-between text-[10px] text-[#6B5E70] mb-0.5">' +
+              '<span class="font-bold text-[#964F5B]">' + m.sender + '</span>' +
+              '<span>' + m.time + '</span>' +
+            '</div>' +
+            '<p class="text-[#2D2430] keep-all">' + m.text + '</p>' +
+          '</div>'
+        )).join('');
+        box.scrollTop = box.scrollHeight;
+      },
+
+      sendChatMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        const user = this.getCurrentUser();
+        if (!text || !user || !this.currentRoomId) return;
+
+        if (!this.state.chats[this.currentRoomId]) this.state.chats[this.currentRoomId] = [];
+        this.state.chats[this.currentRoomId].push({
+          sender: user.name,
+          text,
+          time: '방금 전'
+        });
+        input.value = '';
+        this.save();
+        this.renderChat();
+      },
+
+      sendTipCoins(amount) {
+        const user = this.getCurrentUser();
+        const room = this.state.rooms.find(r => r.id === this.currentRoomId);
+        if (!user || !room) return;
+
+        if (user.coins < amount) {
+          this.toast('보유 문코인(MC)이 부족합니다.');
+          return;
+        }
+
+        user.coins -= amount;
+        const feeCoins = Math.round(amount * 0.05 * 10) / 10;
+        const netCoins = Math.round((amount - feeCoins) * 10) / 10;
+        this.state.ceoRevenueCoins = Math.round((this.state.ceoRevenueCoins + feeCoins) * 10) / 10;
+
+        const host = this.state.users.find(u => u.id === room.hostId || u.name === room.hostName);
+        if (host) {
+          host.coins = Math.round((host.coins + netCoins) * 10) / 10;
+          this.syncUserToCloud(host);
+        }
+
+        this.state.settlements.unshift({
+          id: 'st-' + Date.now(),
+          counselorName: room.hostName,
+          grossCoins: amount,
+          feeRate: 0.05,
+          netCoins,
+          status: 'pending'
+        });
+
+        this.save();
+        this.syncUserToCloud(user);
+        document.getElementById('roomCoinBalance').textContent = user.coins;
+        document.getElementById('lobbyCoinBalance').textContent = user.coins;
+
+        if (!this.state.chats[this.currentRoomId]) this.state.chats[this.currentRoomId] = [];
+        this.state.chats[this.currentRoomId].push({
+          sender: '시스템',
+          text: user.name + '님이 ' + amount + ' MC를 후원했습니다. (최저 수수료 5.0% 적용 · 상담사 ' + netCoins + ' MC 정산)',
+          time: '방금 전'
+        });
+        this.renderChat();
+        this.toast('🪙 ' + amount + ' MC 후원 완료 (수수료 5.0% 반영)');
+      },
+
+      async openAdminConsole() {
+        const modal = document.getElementById('adminConsoleModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        await this.refreshRoomsFromCloud(false);
+        await this.loadUsersFromCloud();
+        this.renderAdminConsole();
+      },
+
+      async refreshAdminUsers() {
+        await this.refreshRoomsFromCloud(false);
+        await this.loadUsersFromCloud();
+        this.renderAdminConsole();
+        this.toast('회원 목록이 최신 DB와 동기화되었습니다.');
+      },
+
+      closeAdminConsole() {
+        const modal = document.getElementById('adminConsoleModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      },
+
+      renderAdminConsole() {
+        document.getElementById('kpiTotalUsers').textContent = this.state.users.length + '명';
+        document.getElementById('kpiCeoRevenue').textContent = this.state.ceoRevenueCoins + ' MC';
+
+        const settleBox = document.getElementById('settlementListBox');
+        settleBox.innerHTML = this.state.settlements.length
+          ? this.state.settlements.map(s => (
+              '<div class="p-3 rounded-2xl bg-white border border-[#B76E79]/20 flex items-center justify-between gap-2">' +
+                '<div>' +
+                  '<span class="font-bold text-[#2D2430]">' + s.counselorName + '</span>' +
+                  '<span class="text-[#6B5E70] ml-1.5">총 ' + s.grossCoins + ' MC → 실지급 ' + s.netCoins + ' MC (수수료 5.0%)</span>' +
+                '</div>' +
+                (s.status === 'approved'
+                  ? '<span class="px-2.5 py-1 rounded-full bg-[#F7F3FC] text-[#6B5E70] font-bold">승인 완료</span>'
+                  : '<button type="button" onclick="app.approveSettlement(\'' + s.id + '\')" class="rose-gold-btn px-3 py-1 rounded-lg font-bold">정산 승인</button>') +
+              '</div>'
+            )).join('')
+          : '<p class="text-[#6B5E70]">정산 요청 내역이 없습니다.</p>';
+
+        const usersBox = document.getElementById('adminUsersBox');
+        usersBox.innerHTML = this.state.users.map(u => {
+          const isCeo = u.role === 'admin';
+          const roleBadge =
+            u.role === 'admin' ? '👑 대표 관리자' :
+            u.role === 'counselor' ? '🎙️ 타로 상담사' : '🙋 일반 내담자';
+          return (
+            '<div class="p-3 rounded-2xl bg-white border border-[#B76E79]/20 flex flex-wrap items-center justify-between gap-2">' +
+              '<div>' +
+                '<p class="font-bold text-[#2D2430]">' + u.name + ' <span class="text-[11px] font-semibold text-[#964F5B]">(' + roleBadge + ')</span></p>' +
+                '<p class="text-[11px] text-[#6B5E70]">' + (u.email || '-') + ' · 보유 <strong>' + u.coins + ' MC</strong></p>' +
+              '</div>' +
+              '<div class="flex items-center gap-1.5 flex-wrap">' +
+                '<button type="button" onclick="app.adjustUserCoins(\'' + u.id + '\', 100)" class="soft-pill-btn px-2.5 py-1 rounded-lg font-bold">+100 MC</button>' +
+                '<button type="button" onclick="app.adjustUserCoins(\'' + u.id + '\', -50)" class="soft-pill-btn px-2.5 py-1 rounded-lg font-bold">-50 MC</button>' +
+                (isCeo
+                  ? '<span class="px-2.5 py-1 rounded-lg bg-[#FDF4F7] text-[#964F5B] font-bold">대표 보호</span>'
+                  : '<button type="button" onclick="app.deleteUser(\'' + u.id + '\')" class="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 border border-red-200 font-bold">🗑️ 삭제</button>') +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+      },
+
+      adjustUserCoins(userId, delta) {
+        const target = this.state.users.find(u => u.id === userId);
+        if (!target) return;
+        target.coins = Math.max(0, Math.round((target.coins + delta) * 10) / 10);
+        this.save();
+        this.syncUserToCloud(target);
+        this.renderAdminConsole();
+        const me = this.getCurrentUser();
+        if (me) {
+          document.getElementById('lobbyCoinBalance').textContent = me.coins;
+          document.getElementById('roomCoinBalance').textContent = me.coins;
+        }
+        this.toast(target.name + '님 코인이 ' + (delta > 0 ? '+' : '') + delta + ' MC 조정되었습니다.');
+      },
+
+      async deleteUser(userId) {
+        const target = this.state.users.find(u => u.id === userId);
+        if (!target || target.role === 'admin') {
+          this.toast('대표 관리자 계정은 삭제할 수 없습니다.');
+          return;
+        }
+        this.state.users = this.state.users.filter(u => u.id !== userId);
+        this.save();
+        if (supabaseClient && isValidUuid(userId)) {
+          try {
+            await supabaseClient.from('profiles').delete().eq('id', userId);
+          } catch (err) {}
+        }
+        this.renderAdminConsole();
+        this.toast(target.name + ' 회원 계정이 삭제되었습니다.');
+      },
+
+      approveSettlement(settlementId) {
+        const item = this.state.settlements.find(s => s.id === settlementId);
+        if (!item) return;
+        item.status = 'approved';
+        this.save();
+        this.renderAdminConsole();
+        this.toast(item.counselorName + '님 정산(' + item.netCoins + ' MC)이 승인되었습니다.');
+      },
+
+      withdrawCeoRevenue() {
+        if (this.state.ceoRevenueCoins <= 0) {
+          this.toast('출금 가능한 대표 수익이 없습니다.');
+          return;
+        }
+        const amount = this.state.ceoRevenueCoins;
+        const krw = amount * 100;
+        this.state.ceoRevenueCoins = 0;
+        this.save();
+        this.renderAdminConsole();
+        this.toast('유진 대표 수익 ' + amount + ' MC (' + krw.toLocaleString() + '원) 출금이 신청되었습니다.');
+      },
+
+      async init() {
+        this.setupPullToRefresh();
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          this.deferredInstallPrompt = e;
+        });
+
+        window.addEventListener('appinstalled', () => {
+          this.deferredInstallPrompt = null;
+          this.toast('✨ 아르카나 라이브가 홈 화면에 추가되었습니다.');
+        });
+
+        await this.refreshRoomsFromCloud(false);
+        await this.loadUsersFromCloud();
+
+        const current = this.getCurrentUser();
+        if (current) {
+          document.getElementById('authScreen').classList.add('hidden');
+          document.getElementById('lobbyView').classList.remove('hidden');
+          this.renderLobby();
+          this.subscribeRoomsRealtime();
+        }
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => app.init());
+  </script>
+</body>
+</html>
