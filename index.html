@@ -619,7 +619,7 @@
       <div class="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-[#B76E79]/20">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-[#2D2430]">👑 유진 대표 관리자 콘솔</h2>
-          <p class="text-xs text-[#6B5E70]">회원 관리 · 코인 충전 승인 · 직권 지급/차감 · 5.0% 수수료 정산 · 수익 출금</p>
+          <p class="text-xs text-[#6B5E70]">입금 계좌 설정 · 코인 충전 승인 · 회원 관리 · 5.0% 수수료 정산 · 수익 출금</p>
         </div>
         <button type="button" onclick="app.closeAdminConsole()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-bold">닫기</button>
       </div>
@@ -641,6 +641,20 @@
           <p class="text-[11px] text-[#6B5E70]">수익 출금</p>
           <button type="button" onclick="app.withdrawCeoRevenue()" class="mt-1 rose-gold-btn py-1.5 rounded-lg text-[11px] font-bold">
             전액 출금 신청
+          </button>
+        </div>
+      </div>
+
+      <!-- 대표가 직접 입력·수정하는 입금 계좌 안내 설정 -->
+      <div class="p-4 rounded-2xl bg-[#FDFBF7] border border-[#B76E79]/25 mb-5">
+        <h3 class="text-xs font-bold text-[#2D2430] mb-1">🏦 문코인 충전 입금 계좌 안내 설정</h3>
+        <p class="text-[11px] text-[#6B5E70] mb-2.5 keep-all">
+          여기에 입력·저장한 내용이 회원 코인 충전 창에 그대로 노출됩니다. 계좌가 바뀌면 언제든 수정 저장하세요.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="adminDepositAccountInput" type="text" placeholder="예: 카카오뱅크 3333-XX-XXXXXX (예금주: 유진)" class="flex-1 px-3.5 py-2 rounded-xl bg-white border border-[#B76E79]/25 text-xs outline-none focus:border-[#B76E79]" />
+          <button type="button" onclick="app.saveDepositAccount()" class="rose-gold-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
+            계좌 저장하기
           </button>
         </div>
       </div>
@@ -667,7 +681,7 @@
     </div>
   </div>
 
-  <!-- 7. 문코인 충전 신청 모달 (무통장 입금 접수) -->
+  <!-- 7. 문코인 충전 신청 모달 -->
   <div id="coinChargeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="opal-glass max-w-sm w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-2.5">
@@ -675,7 +689,7 @@
         <button type="button" onclick="app.closeCoinChargeModal()" class="text-xs font-bold text-[#6B5E70] px-2 py-1">닫기</button>
       </div>
       <p class="text-xs text-[#6B5E70] mb-3 keep-all">
-        1 MC = 100원 기준입니다. 충전 수량을 선택하고 입금자명을 입력하시면 유진 대표 입금 확인 후 즉시 지급됩니다.
+        1 MC = 100원 기준입니다. 충전 수량을 선택하고 입금자명을 입력하시면 입금 확인 후 즉시 지급됩니다.
       </p>
       <form onsubmit="app.submitCoinChargeRequest(event)" class="space-y-3">
         <div>
@@ -696,9 +710,10 @@
           </div>
         </div>
 
-        <div class="p-3 rounded-2xl bg-[#FDFBF7] border border-[#B76E79]/20 text-xs text-[#2D2430]">
-          <p class="font-bold text-[#964F5B] mb-0.5">입금 계좌 안내 (유진 대표 운영계좌)</p>
-          <p id="chargeSummaryText" class="text-[11px] text-[#6B5E70]">선택 금액: <strong>100 MC = 10,000원</strong> · 계좌이체 후 아래 신청 버튼을 눌러주세요.</p>
+        <div class="p-3 rounded-2xl bg-[#FDFBF7] border border-[#B76E79]/20 text-xs text-[#2D2430] space-y-1">
+          <p class="font-bold text-[#964F5B]">입금 계좌 안내</p>
+          <p id="chargeDepositAccountDisplay" class="text-xs font-bold text-[#2D2430] keep-all">관리자 콘솔에서 입금 계좌를 등록해 주세요.</p>
+          <p id="chargeSummaryText" class="text-[11px] text-[#6B5E70]">선택 금액: <strong>100 MC = 10,000원</strong></p>
         </div>
 
         <div>
@@ -922,6 +937,7 @@
 
     const DEFAULT_STATE = {
       currentUser: null,
+      depositAccountInfo: '',
       users: [
         { id: '00000000-0000-4000-8000-000000000001', name: '유진 대표', email: 'ceo@arcanalave.kr', password: '', role: 'admin', coins: 1000, specialty: '총괄 운영', bank: '등록 완료' },
         { id: '00000000-0000-4000-8000-000000000002', name: '루나 타로', email: 'luna@arcanalave.kr', password: '1234', role: 'counselor', coins: 350, specialty: '연애·재회·속마음', bank: '카카오뱅크 3333-01-987654 (루나)' },
@@ -1262,8 +1278,25 @@
       },
 
       // =========================================================
-      // 문코인 충전 신청 (무통장 입금 접수) & 관리자 승인
+      // 입금 계좌 콘솔 관리 & 문코인 충전 신청/승인
       // =========================================================
+      saveDepositAccount() {
+        const input = document.getElementById('adminDepositAccountInput');
+        if (!input) return;
+        const val = input.value.trim();
+        this.state.depositAccountInfo = val;
+        this.save();
+        this.renderDepositAccountDisplay();
+        this.toast(val ? '🏦 입금 계좌 안내가 저장되었습니다.' : '입금 계좌 안내가 초기화되었습니다.');
+      },
+
+      renderDepositAccountDisplay() {
+        const displayEl = document.getElementById('chargeDepositAccountDisplay');
+        if (!displayEl) return;
+        const info = (this.state.depositAccountInfo || '').trim();
+        displayEl.textContent = info || '관리자 콘솔에서 입금 계좌를 등록해 주세요.';
+      },
+
       openCoinChargeModal() {
         const user = this.getCurrentUser();
         if (!user) {
@@ -1271,6 +1304,7 @@
           return;
         }
         this.selectChargeCoins(this.selectedChargeAmount || 100);
+        this.renderDepositAccountDisplay();
         document.getElementById('chargeDepositorInput').value = user.name || '';
         const modal = document.getElementById('coinChargeModal');
         modal.classList.remove('hidden');
@@ -1294,7 +1328,7 @@
         const krw = amount * 100;
         const summaryEl = document.getElementById('chargeSummaryText');
         if (summaryEl) {
-          summaryEl.innerHTML = '선택 금액: <strong>' + amount + ' MC = ' + krw.toLocaleString() + '원</strong> · 계좌이체 후 아래 신청 버튼을 눌러주세요.';
+          summaryEl.innerHTML = '선택 금액: <strong>' + amount + ' MC = ' + krw.toLocaleString() + '원</strong>';
         }
       },
 
@@ -1972,6 +2006,8 @@
         const modal = document.getElementById('adminConsoleModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        const accountInput = document.getElementById('adminDepositAccountInput');
+        if (accountInput) accountInput.value = this.state.depositAccountInfo || '';
         await this.refreshRoomsFromCloud(false);
         await this.loadUsersFromCloud();
         this.renderAdminConsole();
@@ -1993,6 +2029,10 @@
       renderAdminConsole() {
         document.getElementById('kpiTotalUsers').textContent = this.state.users.length + '명';
         document.getElementById('kpiCeoRevenue').textContent = this.state.ceoRevenueCoins + ' MC';
+        const accountInput = document.getElementById('adminDepositAccountInput');
+        if (accountInput && document.activeElement !== accountInput) {
+          accountInput.value = this.state.depositAccountInfo || '';
+        }
 
         const chargeBox = document.getElementById('chargeRequestListBox');
         const reqs = Array.isArray(this.state.chargeRequests) ? this.state.chargeRequests : [];
@@ -2105,6 +2145,7 @@
 
       async init() {
         this.setupPullToRefresh();
+        this.renderDepositAccountDisplay();
 
         window.addEventListener('beforeinstallprompt', (e) => {
           e.preventDefault();
