@@ -354,6 +354,9 @@
         <span class="px-3 py-1.5 rounded-xl bg-[#FFFDF7] border border-[#D4AF37]/40 text-xs font-bold text-[#2D2430] whitespace-nowrap">
           🪙 <span id="lobbyCoinBalance">0</span> MC
         </span>
+        <button type="button" onclick="app.openCoinChargeModal()" class="rose-gold-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+          ➕ 코인 충전
+        </button>
         <button type="button" onclick="app.triggerAppInstall()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-bold text-[#964F5B] whitespace-nowrap">
           📲 앱 다운로드
         </button>
@@ -482,6 +485,9 @@
           <span class="px-3 py-1.5 rounded-xl bg-white/90 border border-[#D4AF37]/45 text-xs font-bold text-[#2D2430] whitespace-nowrap">
             🪙 <span id="roomCoinBalance">0</span> MC
           </span>
+          <button type="button" onclick="app.openCoinChargeModal()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-bold text-[#964F5B] whitespace-nowrap">
+            ➕ 코인 충전
+          </button>
           <button type="button" onclick="app.shuffleAndSpreadDeck()" class="rose-gold-btn px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
             🃏 78장 부채꼴 펼치기
           </button>
@@ -536,7 +542,10 @@
 
         <div class="opal-glass rounded-2xl p-4 flex flex-col justify-between">
           <div>
-            <h3 class="text-xs font-bold text-[#2D2430] mb-1">🪙 상담 코인 후원 & 정산</h3>
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <h3 class="text-xs font-bold text-[#2D2430]">🪙 상담 코인 후원 & 정산</h3>
+              <button type="button" onclick="app.openCoinChargeModal()" class="text-[11px] font-bold text-[#964F5B] underline">코인 충전 신청</button>
+            </div>
             <p class="text-[11px] text-[#6B5E70] mb-3 keep-all">
               1 MC = 100원 기준 · 플랫폼 최저 수수료 5.0% 적용 (상담사 95.0% 정산)
             </p>
@@ -610,7 +619,7 @@
       <div class="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-[#B76E79]/20">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-[#2D2430]">👑 유진 대표 관리자 콘솔</h2>
-          <p class="text-xs text-[#6B5E70]">회원 관리 · 직권 코인 지급/차감 · 5.0% 최저수수료 정산 승인 · 대표 수익 출금</p>
+          <p class="text-xs text-[#6B5E70]">회원 관리 · 코인 충전 승인 · 직권 지급/차감 · 5.0% 수수료 정산 · 수익 출금</p>
         </div>
         <button type="button" onclick="app.closeAdminConsole()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-bold">닫기</button>
       </div>
@@ -637,6 +646,11 @@
       </div>
 
       <div class="mb-5">
+        <h3 class="text-xs font-bold text-[#2D2430] mb-2">🪙 문코인 충전 입금 확인 & 승인 (1 MC = 100원)</h3>
+        <div id="chargeRequestListBox" class="space-y-2 text-xs"></div>
+      </div>
+
+      <div class="mb-5">
         <h3 class="text-xs font-bold text-[#2D2430] mb-2">💳 상담사 정산 요청 (95.0% 지급 / 5.0% 수수료)</h3>
         <div id="settlementListBox" class="space-y-2 text-xs"></div>
       </div>
@@ -653,7 +667,53 @@
     </div>
   </div>
 
-  <!-- 7. 카드 확대 해석 모달 -->
+  <!-- 7. 문코인 충전 신청 모달 (무통장 입금 접수) -->
+  <div id="coinChargeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+    <div class="opal-glass max-w-sm w-full rounded-3xl p-5">
+      <div class="flex items-center justify-between mb-2.5">
+        <h3 class="text-base font-bold text-[#2D2430]">🪙 문코인(MC) 충전 신청</h3>
+        <button type="button" onclick="app.closeCoinChargeModal()" class="text-xs font-bold text-[#6B5E70] px-2 py-1">닫기</button>
+      </div>
+      <p class="text-xs text-[#6B5E70] mb-3 keep-all">
+        1 MC = 100원 기준입니다. 충전 수량을 선택하고 입금자명을 입력하시면 유진 대표 입금 확인 후 즉시 지급됩니다.
+      </p>
+      <form onsubmit="app.submitCoinChargeRequest(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-[#6B5E70] mb-1.5">충전 수량 선택</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="app.selectChargeCoins(50)" data-charge="50" class="charge-pkg-btn py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79]/25 bg-white text-[#2D2430]">
+              50 MC (5,000원)
+            </button>
+            <button type="button" onclick="app.selectChargeCoins(100)" data-charge="100" class="charge-pkg-btn py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79] bg-[#FDF4F7] text-[#964F5B]">
+              100 MC (10,000원)
+            </button>
+            <button type="button" onclick="app.selectChargeCoins(300)" data-charge="300" class="charge-pkg-btn py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79]/25 bg-white text-[#2D2430]">
+              300 MC (30,000원)
+            </button>
+            <button type="button" onclick="app.selectChargeCoins(500)" data-charge="500" class="charge-pkg-btn py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79]/25 bg-white text-[#2D2430]">
+              500 MC (50,000원)
+            </button>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-[#FDFBF7] border border-[#B76E79]/20 text-xs text-[#2D2430]">
+          <p class="font-bold text-[#964F5B] mb-0.5">입금 계좌 안내 (유진 대표 운영계좌)</p>
+          <p id="chargeSummaryText" class="text-[11px] text-[#6B5E70]">선택 금액: <strong>100 MC = 10,000원</strong> · 계좌이체 후 아래 신청 버튼을 눌러주세요.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#6B5E70] mb-1">실제 입금자명</label>
+          <input id="chargeDepositorInput" type="text" required placeholder="예: 홍길동 (계좌이체 성함)" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#B76E79]/25 text-sm outline-none focus:border-[#B76E79]" />
+        </div>
+
+        <button type="submit" class="w-full rose-gold-btn py-3 rounded-xl text-sm font-bold">
+          ✨ 충전 신청 접수하기
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8. 카드 확대 해석 모달 -->
   <div id="cardDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="opal-glass max-w-md w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-3">
@@ -672,7 +732,7 @@
     </div>
   </div>
 
-  <!-- 8. 스마트폰 앱 설치(홈 화면 추가) 안내 모달 -->
+  <!-- 9. 스마트폰 앱 설치(홈 화면 추가) 안내 모달 -->
   <div id="installGuideModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="opal-glass max-w-sm w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-2.5">
@@ -892,6 +952,7 @@
         }
       ],
       ceoRevenueCoins: 120,
+      chargeRequests: [],
       settlements: [
         { id: 'st-1', counselorName: '루나 타로', grossCoins: 200, feeRate: 0.05, netCoins: 190, status: 'pending' }
       ],
@@ -934,6 +995,7 @@
       state: loadState(),
       registerRole: 'client',
       socialProvider: 'kakao',
+      selectedChargeAmount: 100,
       selectedBgStyle: 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)',
       selectedBgImage: '',
       currentRoomId: null,
@@ -1197,6 +1259,94 @@
 
       getCurrentUser() {
         return this.state.users.find(u => u.id === this.state.currentUser) || null;
+      },
+
+      // =========================================================
+      // 문코인 충전 신청 (무통장 입금 접수) & 관리자 승인
+      // =========================================================
+      openCoinChargeModal() {
+        const user = this.getCurrentUser();
+        if (!user) {
+          this.toast('로그인 후 코인 충전을 신청할 수 있습니다.');
+          return;
+        }
+        this.selectChargeCoins(this.selectedChargeAmount || 100);
+        document.getElementById('chargeDepositorInput').value = user.name || '';
+        const modal = document.getElementById('coinChargeModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      },
+
+      closeCoinChargeModal() {
+        const modal = document.getElementById('coinChargeModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      },
+
+      selectChargeCoins(amount) {
+        this.selectedChargeAmount = amount;
+        document.querySelectorAll('.charge-pkg-btn').forEach(btn => {
+          const active = Number(btn.dataset.charge) === amount;
+          btn.className = active
+            ? 'charge-pkg-btn py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79] bg-[#FDF4F7] text-[#964F5B]'
+            : 'charge-pkg-btn py-2.5 px-3 rounded-xl text-xs font-bold border border-[#B76E79]/25 bg-white text-[#2D2430]';
+        });
+        const krw = amount * 100;
+        const summaryEl = document.getElementById('chargeSummaryText');
+        if (summaryEl) {
+          summaryEl.innerHTML = '선택 금액: <strong>' + amount + ' MC = ' + krw.toLocaleString() + '원</strong> · 계좌이체 후 아래 신청 버튼을 눌러주세요.';
+        }
+      },
+
+      submitCoinChargeRequest(e) {
+        e.preventDefault();
+        const user = this.getCurrentUser();
+        if (!user) return;
+        const depositor = document.getElementById('chargeDepositorInput').value.trim();
+        if (!depositor) return;
+
+        const amount = this.selectedChargeAmount || 100;
+        const krw = amount * 100;
+        if (!Array.isArray(this.state.chargeRequests)) {
+          this.state.chargeRequests = [];
+        }
+
+        this.state.chargeRequests.unshift({
+          id: 'chg-' + Date.now(),
+          userId: user.id,
+          userName: user.name,
+          depositorName: depositor,
+          coins: amount,
+          krw,
+          status: 'pending',
+          createdAt: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+        });
+        this.save();
+        this.closeCoinChargeModal();
+        this.toast('✨ ' + amount + ' MC (' + krw.toLocaleString() + '원) 충전 신청이 접수되었습니다.');
+      },
+
+      approveChargeRequest(reqId) {
+        if (!Array.isArray(this.state.chargeRequests)) return;
+        const req = this.state.chargeRequests.find(r => r.id === reqId);
+        if (!req || req.status === 'approved') return;
+
+        req.status = 'approved';
+        const targetUser = this.state.users.find(u => u.id === req.userId || u.name === req.userName);
+        if (targetUser) {
+          targetUser.coins = Math.round((Number(targetUser.coins || 0) + Number(req.coins || 0)) * 10) / 10;
+          this.syncUserToCloud(targetUser);
+        }
+
+        this.save();
+        this.renderAdminConsole();
+
+        const me = this.getCurrentUser();
+        if (me) {
+          document.getElementById('lobbyCoinBalance').textContent = me.coins;
+          document.getElementById('roomCoinBalance').textContent = me.coins;
+        }
+        this.toast('🪙 ' + req.userName + '님에게 ' + req.coins + ' MC 충전 승인 완료!');
       },
 
       async syncUserToCloud(user) {
@@ -1779,7 +1929,7 @@
         if (!user || !room) return;
 
         if (user.coins < amount) {
-          this.toast('보유 문코인(MC)이 부족합니다.');
+          this.toast('보유 문코인(MC)이 부족합니다. 상단 코인 충전을 이용해 주세요.');
           return;
         }
 
@@ -1843,6 +1993,22 @@
       renderAdminConsole() {
         document.getElementById('kpiTotalUsers').textContent = this.state.users.length + '명';
         document.getElementById('kpiCeoRevenue').textContent = this.state.ceoRevenueCoins + ' MC';
+
+        const chargeBox = document.getElementById('chargeRequestListBox');
+        const reqs = Array.isArray(this.state.chargeRequests) ? this.state.chargeRequests : [];
+        chargeBox.innerHTML = reqs.length
+          ? reqs.map(r => (
+              '<div class="p-3 rounded-2xl bg-white border border-[#B76E79]/20 flex flex-wrap items-center justify-between gap-2">' +
+                '<div>' +
+                  '<span class="font-bold text-[#2D2430]">' + r.userName + '</span>' +
+                  '<span class="text-[#6B5E70] ml-1.5">입금자: <strong>' + r.depositorName + '</strong> · ' + r.coins + ' MC (' + Number(r.krw || r.coins * 100).toLocaleString() + '원)</span>' +
+                '</div>' +
+                (r.status === 'approved'
+                  ? '<span class="px-2.5 py-1 rounded-full bg-[#F7F3FC] text-[#6B5E70] font-bold">지급 완료</span>'
+                  : '<button type="button" onclick="app.approveChargeRequest(\'' + r.id + '\')" class="rose-gold-btn px-3 py-1 rounded-lg font-bold">충전 승인 (+' + r.coins + ' MC)</button>') +
+              '</div>'
+            )).join('')
+          : '<p class="text-[#6B5E70]">대기 중인 문코인 충전 신청 내역이 없습니다.</p>';
 
         const settleBox = document.getElementById('settlementListBox');
         settleBox.innerHTML = this.state.settlements.length
