@@ -514,7 +514,10 @@
       <div class="spread-mat-bright rounded-3xl p-4 mb-5">
         <div class="flex items-center justify-between text-xs text-[#6B5E70] mb-3">
           <span id="spreadGuideText" class="font-semibold text-[#2D2430]">3장의 카드를 아래 78장 부채꼴 덱에서 선택하세요.</span>
-          <span id="remainingDeckCount">남은 카드: 78장</span>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="app.loadRoomChatsFromCloud()" class="text-[11px] font-bold text-[#964F5B] underline">보드 동기화</button>
+            <span id="remainingDeckCount">남은 카드: 78장</span>
+          </div>
         </div>
         <div id="drawnCardsBoard" class="grid grid-cols-1 sm:grid-cols-3 gap-4 min-h-[220px] items-center justify-items-center"></div>
       </div>
@@ -1866,7 +1869,7 @@
             .filter(Boolean);
 
           const pickedIds = new Set(this.drawnCards.map(c => c.id));
-          this.availableDeck = this.availableDeck.filter(c => !pickedIds.has(c.id));
+          this.availableDeck = FULL_78_DECK.filter(c => !pickedIds.has(c.id));
 
           this.renderBoard();
           this.renderFanDeck();
@@ -2014,7 +2017,7 @@
 
         if (supabaseClient) {
           try {
-            await supabaseClient.from('room_chats').insert([{
+            const { error } = await supabaseClient.from('room_chats').insert([{
               id: isValidUuid(item.id) ? item.id : generateUuid(),
               room_id: roomId,
               sender: item.sender,
@@ -2023,6 +2026,9 @@
               text: item.text,
               time_label: item.time
             }]);
+            if (error && !silentCloudError) {
+              this.toast('채팅 DB 전송 오류: ' + error.message);
+            }
           } catch (err) {
             if (!silentCloudError) {
               this.toast('로컬 채팅에 전송되었습니다.');
