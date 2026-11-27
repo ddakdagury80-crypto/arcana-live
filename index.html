@@ -515,7 +515,7 @@
         <div class="flex items-center justify-between text-xs text-[#6B5E70] mb-3">
           <span id="spreadGuideText" class="font-semibold text-[#2D2430]">3장의 카드를 아래 78장 부채꼴 덱에서 선택하세요.</span>
           <div class="flex items-center gap-2">
-            <button type="button" onclick="app.loadRoomChatsFromCloud()" class="text-[11px] font-bold text-[#964F5B] underline">보드 동기화</button>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">● 자동 동기화</span>
             <span id="remainingDeckCount">남은 카드: 78장</span>
           </div>
         </div>
@@ -538,7 +538,7 @@
               <h3 class="text-xs font-bold text-[#2D2430]">💬 스푼 라이브 1:1 채팅</h3>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">● LIVE</span>
             </div>
-            <button type="button" onclick="app.loadRoomChatsFromCloud()" class="text-[11px] font-semibold text-[#964F5B] underline">대화·카드 동기화</button>
+            <span class="text-[11px] font-semibold text-[#6B5E70]">실시간 자동 반영</span>
           </div>
           <div id="chatLogBox" class="h-52 overflow-y-auto space-y-2 p-3 rounded-xl bg-[#FDFBF7] border border-[#B76E79]/15 mb-2.5 text-xs"></div>
           <form onsubmit="app.sendChatMessage(event)" class="flex gap-2">
@@ -1009,6 +1009,8 @@
       deferredInstallPrompt: null,
       roomsChannel: null,
       chatChannel: null,
+      liveSyncTimer: null,
+      _lastBoardSig: '',
       dbStatusSummary: '확인 전',
       _ptrStartY: 0,
       _ptrPulling: false,
@@ -1280,8 +1282,17 @@
 
       async logout() {
         const leavingUser = this.getCurrentUser();
+        if (this.currentRoomId && leavingUser) {
+          await this.pushChatMessage({
+            sender: '시스템',
+            senderRole: 'system',
+            msgType: 'notice',
+            text: leavingUser.name + '님이 퇴장하셨습니다.',
+            time: this.formatNowTime()
+          }, true);
+        }
         await this.cleanupCounselorRoomsOnLeave(leavingUser);
-        this.unsubscribeChatRealtime();
+        this.stopRoomAutoSync();
         this.state.currentUser = null;
         this.currentRoomId = null;
         this.save();
@@ -1809,6 +1820,7 @@
         if (!room || !user) return;
 
         this.currentRoomId = room.id;
+        this._lastBoardSig = '';
         document.getElementById('lobbyView').classList.add('hidden');
         document.getElementById('roomView').classList.remove('hidden');
 
@@ -1827,6 +1839,7 @@
         this.resetLocalDeckOnly();
         await this.loadRoomChatsFromCloud();
         this.subscribeChatRealtime(room.id);
+        this.startRoomAutoSync();
         await this.pushChatMessage({
           sender: '시스템',
           senderRole: 'system',
@@ -1836,7 +1849,20 @@
         }, true);
       },
 
-      unsubscribeChatRealtime() {
+      startRoomAutoSync() {
+        this.stopRoomAutoSync();
+        this.liveSyncTimer = setInterval(() => {
+          if (!this.currentRoomId) return;
+          if (document.getElementById('roomView').classList.contains('hidden')) return;
+          this.loadRoomChatsFromCloud();
+        }, 2000);
+      },
+
+      stopRoomAutoSync() {
+        if (this.liveSyncTimer) {
+          clearInterval(this.liveSyncTimer);
+          this.liveSyncTimer = null;
+        }
         if (supabaseClient && this.chatChannel) {
           try {
             supabaseClient.removeChannel(this.chatChannel);
@@ -1849,6 +1875,13 @@
         try {
           const data = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
           if (!data || !Array.isArray(data.cards)) return;
+
+          const sig = JSON.stringify({
+            spreadCount: data.spreadCount || this.spreadCount,
+            cards: data.cards
+          });
+          if (sig === this._lastBoardSig) return;
+          this._lastBoardSig = sig;
 
           if (typeof data.spreadCount === 'number' && [1, 3, 5].includes(data.spreadCount)) {
             this.spreadCount = data.spreadCount;
@@ -1882,6 +1915,17 @@
           spreadCount: this.spreadCount,
           cards: this.drawnCards.map(c => ({ id: c.id, isReversed: Boolean(c.isReversed) }))
         };
+        this._lastBoardSig = JSON.stringify(payloadObj);
+
+        if (this.chatChannel && supabaseClient) {
+          try {
+            await this.chatChannel.send({
+              type: 'broadcast',
+              event: 'board_update',
+              payload: payloadObj
+            });
+          } catch (err) {}
+        }
 
         await this.pushChatMessage({
           sender: '시스템',
@@ -1903,11 +1947,21 @@
       },
 
       subscribeChatRealtime(roomId) {
-        this.unsubscribeChatRealtime();
+        if (supabaseClient && this.chatChannel) {
+          try {
+            supabaseClient.removeChannel(this.chatChannel);
+          } catch (err) {}
+          this.chatChannel = null;
+        }
         if (!supabaseClient || !roomId) return;
         try {
           this.chatChannel = supabaseClient
-            .channel('room-chats-' + roomId)
+            .channel('room-live-sync-' + roomId)
+            .on('broadcast', { event: 'board_update' }, (msg) => {
+              if (this.currentRoomId === roomId && msg && msg.payload) {
+                this.applyBoardSyncPayload(msg.payload);
+              }
+            })
             .on(
               'postgres_changes',
               { event: 'INSERT', schema: 'public', table: 'room_chats', filter: 'room_id=eq.' + roomId },
@@ -2017,7 +2071,7 @@
 
         if (supabaseClient) {
           try {
-            const { error } = await supabaseClient.from('room_chats').insert([{
+            await supabaseClient.from('room_chats').insert([{
               id: isValidUuid(item.id) ? item.id : generateUuid(),
               room_id: roomId,
               sender: item.sender,
@@ -2026,9 +2080,6 @@
               text: item.text,
               time_label: item.time
             }]);
-            if (error && !silentCloudError) {
-              this.toast('채팅 DB 전송 오류: ' + error.message);
-            }
           } catch (err) {
             if (!silentCloudError) {
               this.toast('로컬 채팅에 전송되었습니다.');
@@ -2042,7 +2093,17 @@
         const user = this.getCurrentUser();
         const leavingRoom = (this.state.rooms || []).find(r => r.id === leavingRoomId);
 
-        this.unsubscribeChatRealtime();
+        if (leavingRoomId && user) {
+          await this.pushChatMessage({
+            sender: '시스템',
+            senderRole: 'system',
+            msgType: 'notice',
+            text: user.name + '님이 퇴장하셨습니다.',
+            time: this.formatNowTime()
+          }, true);
+        }
+
+        this.stopRoomAutoSync();
         this.currentRoomId = null;
         document.getElementById('roomView').classList.add('hidden');
         document.getElementById('lobbyView').classList.remove('hidden');
