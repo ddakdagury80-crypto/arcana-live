@@ -531,7 +531,6 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <!-- 스푼 스타일 1:1 실시간 채팅창 -->
         <div class="lg:col-span-2 opal-glass rounded-2xl p-4 flex flex-col">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
@@ -940,6 +939,7 @@
     const DECK_MAP_BY_ID = new Map(FULL_78_DECK.map(c => [c.id, c]));
 
     const STORAGE_KEY = 'arcana_live_state_v2026_11';
+    const BOARD_SYNC_PREFIX = 'arcana_room_board_sync_v1_';
     const ADMIN_PIN = '1984';
 
     const DEFAULT_STATE = {
@@ -1267,6 +1267,7 @@
           if (this.state.chats && this.state.chats[id]) {
             delete this.state.chats[id];
           }
+          localStorage.removeItem(BOARD_SYNC_PREFIX + id);
         });
         this.save();
 
@@ -1837,6 +1838,7 @@
         }
 
         this.resetLocalDeckOnly();
+        this.pullSavedRoomBoard(room.id);
         await this.loadRoomChatsFromCloud();
         this.subscribeChatRealtime(room.id);
         this.startRoomAutoSync();
@@ -1849,13 +1851,24 @@
         }, true);
       },
 
+      pullSavedRoomBoard(roomId) {
+        if (!roomId) return;
+        try {
+          const raw = localStorage.getItem(BOARD_SYNC_PREFIX + roomId);
+          if (raw) {
+            this.applyBoardSyncPayload(raw);
+          }
+        } catch (err) {}
+      },
+
       startRoomAutoSync() {
         this.stopRoomAutoSync();
         this.liveSyncTimer = setInterval(() => {
           if (!this.currentRoomId) return;
           if (document.getElementById('roomView').classList.contains('hidden')) return;
+          this.pullSavedRoomBoard(this.currentRoomId);
           this.loadRoomChatsFromCloud();
-        }, 2000);
+        }, 1000);
       },
 
       stopRoomAutoSync() {
@@ -1915,7 +1928,12 @@
           spreadCount: this.spreadCount,
           cards: this.drawnCards.map(c => ({ id: c.id, isReversed: Boolean(c.isReversed) }))
         };
-        this._lastBoardSig = JSON.stringify(payloadObj);
+        const serialized = JSON.stringify(payloadObj);
+        this._lastBoardSig = serialized;
+
+        try {
+          localStorage.setItem(BOARD_SYNC_PREFIX + this.currentRoomId, serialized);
+        } catch (err) {}
 
         if (this.chatChannel && supabaseClient) {
           try {
@@ -1931,7 +1949,7 @@
           sender: '시스템',
           senderRole: 'system',
           msgType: 'board_sync',
-          text: JSON.stringify(payloadObj),
+          text: serialized,
           time: this.formatNowTime()
         }, true);
 
@@ -2120,6 +2138,7 @@
           if (this.state.chats && this.state.chats[leavingRoomId]) {
             delete this.state.chats[leavingRoomId];
           }
+          localStorage.removeItem(BOARD_SYNC_PREFIX + leavingRoomId);
           this.save();
           if (supabaseClient) {
             try {
@@ -2558,6 +2577,13 @@
       async init() {
         this.setupPullToRefresh();
         this.renderDepositAccountDisplay();
+
+        window.addEventListener('storage', (e) => {
+          if (!e || !e.key || !this.currentRoomId) return;
+          if (e.key === BOARD_SYNC_PREFIX + this.currentRoomId && e.newValue) {
+            this.applyBoardSyncPayload(e.newValue);
+          }
+        });
 
         window.addEventListener('beforeinstallprompt', (e) => {
           e.preventDefault();
