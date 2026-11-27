@@ -535,7 +535,7 @@
               <h3 class="text-xs font-bold text-[#2D2430]">💬 스푼 라이브 1:1 채팅</h3>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">● LIVE</span>
             </div>
-            <button type="button" onclick="app.loadRoomChatsFromCloud()" class="text-[11px] font-semibold text-[#964F5B] underline">대화 동기화</button>
+            <button type="button" onclick="app.loadRoomChatsFromCloud()" class="text-[11px] font-semibold text-[#964F5B] underline">대화·카드 동기화</button>
           </div>
           <div id="chatLogBox" class="h-52 overflow-y-auto space-y-2 p-3 rounded-xl bg-[#FDFBF7] border border-[#B76E79]/15 mb-2.5 text-xs"></div>
           <form onsubmit="app.sendChatMessage(event)" class="flex gap-2">
@@ -934,6 +934,7 @@
     }
 
     const FULL_78_DECK = buildFull78Deck();
+    const DECK_MAP_BY_ID = new Map(FULL_78_DECK.map(c => [c.id, c]));
 
     const STORAGE_KEY = 'arcana_live_state_v2026_11';
     const ADMIN_PIN = '1984';
@@ -1268,6 +1269,7 @@
           for (const id of removableIds) {
             try {
               await supabaseClient.from('rooms').delete().eq('id', id);
+              await supabaseClient.from('room_chats').delete().eq('room_id', id);
             } catch (err) {}
           }
         }
@@ -1819,7 +1821,7 @@
           surface.style.background = room.bgStyle || 'linear-gradient(155deg, rgba(253,251,247,0.95), rgba(247,243,252,0.92), rgba(253,244,247,0.95))';
         }
 
-        this.shuffleAndSpreadDeck();
+        this.resetLocalDeckOnly();
         await this.loadRoomChatsFromCloud();
         this.subscribeChatRealtime(room.id);
         await this.pushChatMessage({
@@ -1837,6 +1839,63 @@
             supabaseClient.removeChannel(this.chatChannel);
           } catch (err) {}
           this.chatChannel = null;
+        }
+      },
+
+      applyBoardSyncPayload(rawJson) {
+        try {
+          const data = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
+          if (!data || !Array.isArray(data.cards)) return;
+
+          if (typeof data.spreadCount === 'number' && [1, 3, 5].includes(data.spreadCount)) {
+            this.spreadCount = data.spreadCount;
+            document.querySelectorAll('.spread-mode-btn').forEach(btn => {
+              const active = Number(btn.dataset.spread) === this.spreadCount;
+              btn.className = active
+                ? 'spread-mode-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-[#B76E79] bg-[#FDF4F7] text-[#964F5B]'
+                : 'spread-mode-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-[#B76E79]/25 bg-white text-[#2D2430]';
+            });
+          }
+
+          this.drawnCards = data.cards
+            .map(item => {
+              const base = DECK_MAP_BY_ID.get(item.id);
+              if (!base) return null;
+              return { ...base, isReversed: Boolean(item.isReversed) };
+            })
+            .filter(Boolean);
+
+          const pickedIds = new Set(this.drawnCards.map(c => c.id));
+          this.availableDeck = this.availableDeck.filter(c => !pickedIds.has(c.id));
+
+          this.renderBoard();
+          this.renderFanDeck();
+        } catch (err) {}
+      },
+
+      async broadcastBoardState(noticeText) {
+        if (!this.currentRoomId) return;
+        const payloadObj = {
+          spreadCount: this.spreadCount,
+          cards: this.drawnCards.map(c => ({ id: c.id, isReversed: Boolean(c.isReversed) }))
+        };
+
+        await this.pushChatMessage({
+          sender: '시스템',
+          senderRole: 'system',
+          msgType: 'board_sync',
+          text: JSON.stringify(payloadObj),
+          time: this.formatNowTime()
+        }, true);
+
+        if (noticeText) {
+          await this.pushChatMessage({
+            sender: '시스템',
+            senderRole: 'system',
+            msgType: 'notice',
+            text: noticeText,
+            time: this.formatNowTime()
+          }, true);
         }
       },
 
@@ -1860,6 +1919,12 @@
                   text: row.text,
                   time: row.time_label || '방금 전'
                 };
+                if (msg.msgType === 'board_sync') {
+                  if (this.currentRoomId === roomId) {
+                    this.applyBoardSyncPayload(msg.text);
+                  }
+                  return;
+                }
                 if (!this.state.chats[roomId]) this.state.chats[roomId] = [];
                 const dup = this.state.chats[roomId].some(m =>
                   (m.id && msg.id && m.id === msg.id) ||
@@ -1890,18 +1955,30 @@
               .select('*')
               .eq('room_id', roomId)
               .order('created_at', { ascending: true })
-              .limit(100);
+              .limit(120);
 
             if (!error && Array.isArray(data) && data.length > 0) {
-              this.state.chats[roomId] = data.map(row => ({
-                id: row.id,
-                sender: row.sender,
-                senderRole: row.sender_role || 'client',
-                msgType: row.msg_type || 'chat',
-                text: row.text,
-                time: row.time_label || '방금 전'
-              }));
+              let latestBoardSync = null;
+              const visibleMessages = [];
+              data.forEach(row => {
+                if (row.msg_type === 'board_sync') {
+                  latestBoardSync = row.text;
+                  return;
+                }
+                visibleMessages.push({
+                  id: row.id,
+                  sender: row.sender,
+                  senderRole: row.sender_role || 'client',
+                  msgType: row.msg_type || 'chat',
+                  text: row.text,
+                  time: row.time_label || '방금 전'
+                });
+              });
+              this.state.chats[roomId] = visibleMessages;
               this.save();
+              if (latestBoardSync) {
+                this.applyBoardSyncPayload(latestBoardSync);
+              }
             }
           } catch (err) {}
         }
@@ -1926,12 +2003,14 @@
           time: msgObj.time || this.formatNowTime()
         };
 
-        this.state.chats[roomId].push(item);
-        if (this.state.chats[roomId].length > 150) {
-          this.state.chats[roomId] = this.state.chats[roomId].slice(-150);
+        if (item.msgType !== 'board_sync') {
+          this.state.chats[roomId].push(item);
+          if (this.state.chats[roomId].length > 150) {
+            this.state.chats[roomId] = this.state.chats[roomId].slice(-150);
+          }
+          this.save();
+          this.renderChat();
         }
-        this.save();
-        this.renderChat();
 
         if (supabaseClient) {
           try {
@@ -1989,7 +2068,7 @@
         this.subscribeRoomsRealtime();
       },
 
-      setSpreadCount(count) {
+      async setSpreadCount(count) {
         this.spreadCount = count;
         document.querySelectorAll('.spread-mode-btn').forEach(btn => {
           const active = Number(btn.dataset.spread) === count;
@@ -1997,7 +2076,7 @@
             ? 'spread-mode-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-[#B76E79] bg-[#FDF4F7] text-[#964F5B]'
             : 'spread-mode-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-[#B76E79]/25 bg-white text-[#2D2430]';
         });
-        this.clearBoard();
+        await this.clearBoard();
       },
 
       toggleLiveUprightOnly(checked) {
@@ -2009,7 +2088,7 @@
         this.toast(checked ? '정방향만 보기로 설정되었습니다.' : '정·역방향 모두 포함으로 설정되었습니다.');
       },
 
-      shuffleAndSpreadDeck() {
+      resetLocalDeckOnly() {
         this.availableDeck = [...FULL_78_DECK];
         for (let i = this.availableDeck.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -2022,12 +2101,24 @@
         this.renderFanDeck();
       },
 
-      clearBoard() {
-        this.drawnCards = [];
-        this.renderBoard();
+      async shuffleAndSpreadDeck() {
+        this.resetLocalDeckOnly();
+        if (this.currentRoomId) {
+          const user = this.getCurrentUser();
+          const actorName = user ? user.name : '참여자';
+          await this.broadcastBoardState('🃏 ' + actorName + '님이 78장 부채꼴 덱을 새로 펼쳤습니다.');
+        }
       },
 
-      pickCardFromFan(cardId) {
+      async clearBoard() {
+        this.drawnCards = [];
+        this.renderBoard();
+        if (this.currentRoomId) {
+          await this.broadcastBoardState('🧹 스프레드 보드를 초기화했습니다.');
+        }
+      },
+
+      async pickCardFromFan(cardId) {
         if (this.drawnCards.length >= this.spreadCount) {
           this.toast('이번 스프레드는 최대 ' + this.spreadCount + '장까지 뽑을 수 있습니다.');
           return;
@@ -2039,6 +2130,9 @@
         const room = this.state.rooms.find(r => r.id === this.currentRoomId);
         const uprightOnly = room ? !!room.uprightOnly : false;
         const isReversed = uprightOnly ? false : Math.random() < 0.35;
+        const dirLabel = isReversed ? '역방향' : '정방향';
+        const user = this.getCurrentUser();
+        const actorName = user ? user.name : '참여자';
 
         this.drawnCards.push({
           ...card,
@@ -2047,6 +2141,13 @@
 
         this.renderBoard();
         this.renderFanDeck();
+
+        if (this.currentRoomId) {
+          await this.broadcastBoardState(
+            '🃏 ' + actorName + ' 카드 선택 (' + this.drawnCards.length + '/' + this.spreadCount + '): ' +
+            card.nameKo + ' (' + dirLabel + ')'
+          );
+        }
       },
 
       renderBoard() {
@@ -2128,7 +2229,7 @@
 
       renderChat() {
         const box = document.getElementById('chatLogBox');
-        const list = this.state.chats[this.currentRoomId] || [];
+        const list = (this.state.chats[this.currentRoomId] || []).filter(m => m.msgType !== 'board_sync');
         const me = this.getCurrentUser();
         const myName = me ? me.name : '';
 
