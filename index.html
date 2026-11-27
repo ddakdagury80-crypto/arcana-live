@@ -528,15 +528,19 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 opal-glass rounded-2xl p-4">
+        <!-- 스푼 스타일 1:1 실시간 채팅창 -->
+        <div class="lg:col-span-2 opal-glass rounded-2xl p-4 flex flex-col">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xs font-bold text-[#2D2430]">💬 1:1 실시간 리딩 대화</h3>
-            <span class="text-[11px] text-[#6B5E70]">실시간 동기화</span>
+            <div class="flex items-center gap-2">
+              <h3 class="text-xs font-bold text-[#2D2430]">💬 스푼 라이브 1:1 채팅</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">● LIVE</span>
+            </div>
+            <button type="button" onclick="app.loadRoomChatsFromCloud()" class="text-[11px] font-semibold text-[#964F5B] underline">대화 동기화</button>
           </div>
-          <div id="chatLogBox" class="h-44 overflow-y-auto space-y-2 p-2.5 rounded-xl bg-[#FDFBF7] border border-[#B76E79]/15 mb-2.5 text-xs"></div>
+          <div id="chatLogBox" class="h-52 overflow-y-auto space-y-2 p-3 rounded-xl bg-[#FDFBF7] border border-[#B76E79]/15 mb-2.5 text-xs"></div>
           <form onsubmit="app.sendChatMessage(event)" class="flex gap-2">
-            <input id="chatInput" type="text" placeholder="질문이나 리딩 메모를 입력하세요..." class="flex-1 px-3 py-2 rounded-xl bg-white border border-[#B76E79]/25 text-xs outline-none" />
-            <button type="submit" class="rose-gold-btn px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap">전송</button>
+            <input id="chatInput" type="text" autocomplete="off" placeholder="상담사·내담자와 실시간 대화를 나눠보세요..." class="flex-1 px-3.5 py-2.5 rounded-xl bg-white border border-[#B76E79]/25 text-xs sm:text-sm outline-none focus:border-[#B76E79]" />
+            <button type="submit" class="rose-gold-btn px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap">전송</button>
           </form>
         </div>
 
@@ -645,7 +649,6 @@
         </div>
       </div>
 
-      <!-- 대표가 직접 입력·수정하는 입금 계좌 안내 설정 -->
       <div class="p-4 rounded-2xl bg-[#FDFBF7] border border-[#B76E79]/25 mb-5">
         <h3 class="text-xs font-bold text-[#2D2430] mb-1">🏦 문코인 충전 입금 계좌 안내 설정</h3>
         <p class="text-[11px] text-[#6B5E70] mb-2.5 keep-all">
@@ -943,43 +946,13 @@
         { id: '00000000-0000-4000-8000-000000000002', name: '루나 타로', email: 'luna@arcanalave.kr', password: '1234', role: 'counselor', coins: 350, specialty: '연애·재회·속마음', bank: '카카오뱅크 3333-01-987654 (루나)' },
         { id: '00000000-0000-4000-8000-000000000003', name: '하늘빛 내담자', email: 'sky@arcanalave.kr', password: '1234', role: 'client', coins: 200, specialty: '', bank: '' }
       ],
-      rooms: [
-        {
-          id: 'room-1',
-          title: '유진 대표의 오팔빛 1:1 심층 타로 살롱',
-          hostName: '유진 대표',
-          hostId: '00000000-0000-4000-8000-000000000001',
-          category: '종합 타로',
-          price: 50,
-          uprightOnly: false,
-          bgStyle: 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)',
-          bgImage: ''
-        },
-        {
-          id: 'room-2',
-          title: '루나 타로의 정방향 로즈골드 연애 리딩',
-          hostName: '루나 타로',
-          hostId: '00000000-0000-4000-8000-000000000002',
-          category: '연애·재회',
-          price: 40,
-          uprightOnly: true,
-          bgStyle: 'linear-gradient(135deg, #FDF4F7 0%, #FFFDF9 55%, #F7F3FC 100%)',
-          bgImage: ''
-        }
-      ],
+      rooms: [],
       ceoRevenueCoins: 120,
       chargeRequests: [],
       settlements: [
         { id: 'st-1', counselorName: '루나 타로', grossCoins: 200, feeRate: 0.05, netCoins: 190, status: 'pending' }
       ],
-      chats: {
-        'room-1': [
-          { sender: '유진 대표', text: '어서 오세요. 궁금하신 질문을 남기고 78장 부채꼴 덱에서 카드를 선택해 보세요.', time: '방금 전' }
-        ],
-        'room-2': [
-          { sender: '루나 타로', text: '정방향 전용 모드로 진행되는 연애·속마음 리딩룸입니다.', time: '방금 전' }
-        ]
-      }
+      chats: {}
     };
 
     function loadState() {
@@ -987,7 +960,18 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return structuredClone(DEFAULT_STATE);
         const parsed = JSON.parse(raw);
-        return { ...structuredClone(DEFAULT_STATE), ...parsed };
+        const cleanRooms = Array.isArray(parsed.rooms)
+          ? parsed.rooms.filter(r => r && r.id !== 'room-1' && r.id !== 'room-2')
+          : [];
+        const cleanChats = { ...(parsed.chats || {}) };
+        delete cleanChats['room-1'];
+        delete cleanChats['room-2'];
+        return {
+          ...structuredClone(DEFAULT_STATE),
+          ...parsed,
+          rooms: cleanRooms,
+          chats: cleanChats
+        };
       } catch (err) {
         return structuredClone(DEFAULT_STATE);
       }
@@ -1020,6 +1004,7 @@
       availableDeck: [],
       deferredInstallPrompt: null,
       roomsChannel: null,
+      chatChannel: null,
       dbStatusSummary: '확인 전',
       _ptrStartY: 0,
       _ptrPulling: false,
@@ -1263,7 +1248,35 @@
         this.toast(user.name + '님, 환영합니다.');
       },
 
-      logout() {
+      async cleanupCounselorRoomsOnLeave(user) {
+        if (!user || (user.role !== 'counselor' && user.role !== 'admin')) return;
+        const removableRooms = (this.state.rooms || []).filter(r =>
+          (r.hostId && r.hostId === user.id) || (r.hostName && r.hostName === user.name)
+        );
+        if (removableRooms.length === 0) return;
+
+        const removableIds = new Set(removableRooms.map(r => r.id));
+        this.state.rooms = (this.state.rooms || []).filter(r => !removableIds.has(r.id));
+        removableIds.forEach(id => {
+          if (this.state.chats && this.state.chats[id]) {
+            delete this.state.chats[id];
+          }
+        });
+        this.save();
+
+        if (supabaseClient) {
+          for (const id of removableIds) {
+            try {
+              await supabaseClient.from('rooms').delete().eq('id', id);
+            } catch (err) {}
+          }
+        }
+      },
+
+      async logout() {
+        const leavingUser = this.getCurrentUser();
+        await this.cleanupCounselorRoomsOnLeave(leavingUser);
+        this.unsubscribeChatRealtime();
         this.state.currentUser = null;
         this.currentRoomId = null;
         this.save();
@@ -1277,9 +1290,19 @@
         return this.state.users.find(u => u.id === this.state.currentUser) || null;
       },
 
-      // =========================================================
-      // 입금 계좌 콘솔 관리 & 문코인 충전 신청/승인
-      // =========================================================
+      isRoomCounselorOnline(room) {
+        const user = this.getCurrentUser();
+        if (!user) return false;
+        const isStaff = user.role === 'counselor' || user.role === 'admin';
+        if (!isStaff) return false;
+        const matchesHost =
+          (room.hostId && room.hostId === user.id) ||
+          (room.hostName && room.hostName === user.name);
+        if (matchesHost) return true;
+        if (this.currentRoomId === room.id && isStaff) return true;
+        return false;
+      },
+
       saveDepositAccount() {
         const input = document.getElementById('adminDepositAccountInput');
         if (!input) return;
@@ -1473,7 +1496,7 @@
                     this.state.rooms.unshift(incoming);
                     if (!this.state.chats[incoming.id]) {
                       this.state.chats[incoming.id] = [
-                        { sender: incoming.hostName, text: "'" + incoming.title + "' 리딩룸이 오픈되었습니다.", time: '방금 전' }
+                        { sender: '시스템', senderRole: 'system', msgType: 'notice', text: "'" + incoming.title + "' 리딩룸이 열렸습니다.", time: '방금 전' }
                       ];
                     }
                     this.save();
@@ -1494,6 +1517,10 @@
                   this.save();
                   if (!document.getElementById('lobbyView').classList.contains('hidden')) {
                     this.renderLobby();
+                  }
+                  if (this.currentRoomId === payload.old.id) {
+                    this.exitRoomToLobby();
+                    this.toast('상담사가 퇴장하여 리딩룸이 종료되었습니다.');
                   }
                 }
               }
@@ -1524,16 +1551,16 @@
           }
 
           const rows = Array.isArray(data) ? data : [];
-          const cloudRooms = rows.map(normalizeRoomRow);
-          const cloudIds = new Set(cloudRooms.map(r => r.id));
-          const localOnlyRooms = (this.state.rooms || []).filter(r => !cloudIds.has(r.id));
-          this.state.rooms = [...cloudRooms, ...localOnlyRooms];
+          const cloudRooms = rows
+            .map(normalizeRoomRow)
+            .filter(r => r.id !== 'room-1' && r.id !== 'room-2');
+          this.state.rooms = cloudRooms;
           this.save();
-          this.setDbStatus('[' + hostName + '] ✅ 공용DB 방 ' + rows.length + '개');
+          this.setDbStatus('[' + hostName + '] ✅ 공용DB 방 ' + cloudRooms.length + '개');
           this.renderLobby();
 
           if (showNotice) {
-            this.toast('[' + hostName + '] 공용 DB 방 ' + rows.length + '개 확인 완료');
+            this.toast('[' + hostName + '] 공용 DB 방 ' + cloudRooms.length + '개 확인 완료');
           }
         } catch (err) {
           this.setDbStatus('[' + hostName + '] ❌ 통신오류: ' + (err.message || err));
@@ -1653,16 +1680,34 @@
 
         document.getElementById('roomCountBadge').textContent = '총 ' + this.state.rooms.length + '개 방 운영중';
         const grid = document.getElementById('roomListGrid');
+
+        if (!this.state.rooms || this.state.rooms.length === 0) {
+          grid.innerHTML =
+            '<div class="col-span-full opal-glass rounded-3xl p-6 text-center">' +
+              '<p class="text-sm font-bold text-[#2D2430] mb-1">현재 열린 1:1 타로 상담방이 없습니다.</p>' +
+              '<p class="text-xs text-[#6B5E70]">상담사가 방을 개설하면 이곳에 실시간으로 표시됩니다.</p>' +
+            '</div>';
+          return;
+        }
+
         grid.innerHTML = this.state.rooms.map(room => {
           const bgCss = room.bgImage
             ? 'background-image: linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.88)), url(\'' + room.bgImage + '\'); background-size: cover; background-position: center;'
             : 'background: ' + room.bgStyle + ';';
 
+          const online = this.isRoomCounselorOnline(room);
+          const statusBadge = online
+            ? '<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 whitespace-nowrap">● 접속중</span>'
+            : '<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/80 text-[#6B5E70] border border-[#B76E79]/20 whitespace-nowrap">대기중</span>';
+
           return (
             '<div class="opal-glass rounded-3xl p-4 flex flex-col justify-between" style="' + bgCss + '">' +
               '<div>' +
                 '<div class="flex items-center justify-between gap-2 mb-2">' +
-                  '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/90 text-[#964F5B] border border-[#B76E79]/25">' + room.category + '</span>' +
+                  '<div class="flex items-center gap-1.5 flex-wrap">' +
+                    '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/90 text-[#964F5B] border border-[#B76E79]/25">' + room.category + '</span>' +
+                    statusBadge +
+                  '</div>' +
                   '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FFFDF7] text-[#2D2430] border border-[#D4AF37]/40">🪙 ' + room.price + ' MC</span>' +
                 '</div>' +
                 '<h3 class="text-sm sm:text-base font-bold text-[#2D2430] mb-1 keep-all">' + room.title + '</h3>' +
@@ -1738,7 +1783,7 @@
 
         this.state.rooms.unshift(newRoom);
         this.state.chats[newRoom.id] = [
-          { sender: user.name, text: '\'' + title + '\' 리딩룸이 오픈되었습니다.', time: '방금 전' }
+          { sender: '시스템', senderRole: 'system', msgType: 'notice', text: user.name + ' 리더가 \'' + title + '\' 방을 열었습니다.', time: '방금 전' }
         ];
         this.save();
 
@@ -1753,7 +1798,7 @@
         this.enterRoom(newRoom.id);
       },
 
-      enterRoom(roomId) {
+      async enterRoom(roomId) {
         const room = this.state.rooms.find(r => r.id === roomId);
         const user = this.getCurrentUser();
         if (!room || !user) return;
@@ -1775,13 +1820,170 @@
         }
 
         this.shuffleAndSpreadDeck();
+        await this.loadRoomChatsFromCloud();
+        this.subscribeChatRealtime(room.id);
+        await this.pushChatMessage({
+          sender: '시스템',
+          senderRole: 'system',
+          msgType: 'notice',
+          text: user.name + '님이 입장하셨습니다.',
+          time: this.formatNowTime()
+        }, true);
+      },
+
+      unsubscribeChatRealtime() {
+        if (supabaseClient && this.chatChannel) {
+          try {
+            supabaseClient.removeChannel(this.chatChannel);
+          } catch (err) {}
+          this.chatChannel = null;
+        }
+      },
+
+      subscribeChatRealtime(roomId) {
+        this.unsubscribeChatRealtime();
+        if (!supabaseClient || !roomId) return;
+        try {
+          this.chatChannel = supabaseClient
+            .channel('room-chats-' + roomId)
+            .on(
+              'postgres_changes',
+              { event: 'INSERT', schema: 'public', table: 'room_chats', filter: 'room_id=eq.' + roomId },
+              (payload) => {
+                if (!payload.new) return;
+                const row = payload.new;
+                const msg = {
+                  id: row.id,
+                  sender: row.sender,
+                  senderRole: row.sender_role || 'client',
+                  msgType: row.msg_type || 'chat',
+                  text: row.text,
+                  time: row.time_label || '방금 전'
+                };
+                if (!this.state.chats[roomId]) this.state.chats[roomId] = [];
+                const dup = this.state.chats[roomId].some(m =>
+                  (m.id && msg.id && m.id === msg.id) ||
+                  (m.sender === msg.sender && m.text === msg.text && m.time === msg.time)
+                );
+                if (!dup) {
+                  this.state.chats[roomId].push(msg);
+                  this.save();
+                  if (this.currentRoomId === roomId) {
+                    this.renderChat();
+                  }
+                }
+              }
+            )
+            .subscribe();
+        } catch (err) {}
+      },
+
+      async loadRoomChatsFromCloud() {
+        const roomId = this.currentRoomId;
+        if (!roomId) return;
+        if (!this.state.chats[roomId]) this.state.chats[roomId] = [];
+
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient
+              .from('room_chats')
+              .select('*')
+              .eq('room_id', roomId)
+              .order('created_at', { ascending: true })
+              .limit(100);
+
+            if (!error && Array.isArray(data) && data.length > 0) {
+              this.state.chats[roomId] = data.map(row => ({
+                id: row.id,
+                sender: row.sender,
+                senderRole: row.sender_role || 'client',
+                msgType: row.msg_type || 'chat',
+                text: row.text,
+                time: row.time_label || '방금 전'
+              }));
+              this.save();
+            }
+          } catch (err) {}
+        }
         this.renderChat();
       },
 
-      exitRoomToLobby() {
+      formatNowTime() {
+        return new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      },
+
+      async pushChatMessage(msgObj, silentCloudError = false) {
+        const roomId = this.currentRoomId;
+        if (!roomId) return;
+        if (!this.state.chats[roomId]) this.state.chats[roomId] = [];
+
+        const item = {
+          id: msgObj.id || generateUuid(),
+          sender: msgObj.sender,
+          senderRole: msgObj.senderRole || 'client',
+          msgType: msgObj.msgType || 'chat',
+          text: msgObj.text,
+          time: msgObj.time || this.formatNowTime()
+        };
+
+        this.state.chats[roomId].push(item);
+        if (this.state.chats[roomId].length > 150) {
+          this.state.chats[roomId] = this.state.chats[roomId].slice(-150);
+        }
+        this.save();
+        this.renderChat();
+
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('room_chats').insert([{
+              id: isValidUuid(item.id) ? item.id : generateUuid(),
+              room_id: roomId,
+              sender: item.sender,
+              sender_role: item.senderRole,
+              msg_type: item.msgType,
+              text: item.text,
+              time_label: item.time
+            }]);
+          } catch (err) {
+            if (!silentCloudError) {
+              this.toast('로컬 채팅에 전송되었습니다.');
+            }
+          }
+        }
+      },
+
+      async exitRoomToLobby() {
+        const leavingRoomId = this.currentRoomId;
+        const user = this.getCurrentUser();
+        const leavingRoom = (this.state.rooms || []).find(r => r.id === leavingRoomId);
+
+        this.unsubscribeChatRealtime();
         this.currentRoomId = null;
         document.getElementById('roomView').classList.add('hidden');
         document.getElementById('lobbyView').classList.remove('hidden');
+
+        const isHostLeaving = Boolean(
+          user &&
+          (user.role === 'counselor' || user.role === 'admin') &&
+          leavingRoom &&
+          ((leavingRoom.hostId && leavingRoom.hostId === user.id) || (leavingRoom.hostName && leavingRoom.hostName === user.name))
+        );
+
+        if (isHostLeaving) {
+          this.state.rooms = (this.state.rooms || []).filter(r => r.id !== leavingRoomId);
+          if (this.state.chats && this.state.chats[leavingRoomId]) {
+            delete this.state.chats[leavingRoomId];
+          }
+          this.save();
+          if (supabaseClient) {
+            try {
+              await supabaseClient.from('rooms').delete().eq('id', leavingRoomId);
+              await supabaseClient.from('room_chats').delete().eq('room_id', leavingRoomId);
+            } catch (err) {}
+          }
+          this.toast('상담사가 퇴장하여 개설한 방이 종료되었습니다.');
+        }
+
         this.renderLobby();
         this.refreshRoomsFromCloud(false);
         this.subscribeRoomsRealtime();
@@ -1927,37 +2129,79 @@
       renderChat() {
         const box = document.getElementById('chatLogBox');
         const list = this.state.chats[this.currentRoomId] || [];
-        box.innerHTML = list.map(m => (
-          '<div class="p-2 rounded-xl bg-white border border-[#B76E79]/15">' +
-            '<div class="flex items-center justify-between text-[10px] text-[#6B5E70] mb-0.5">' +
-              '<span class="font-bold text-[#964F5B]">' + m.sender + '</span>' +
-              '<span>' + m.time + '</span>' +
-            '</div>' +
-            '<p class="text-[#2D2430] keep-all">' + m.text + '</p>' +
-          '</div>'
-        )).join('');
+        const me = this.getCurrentUser();
+        const myName = me ? me.name : '';
+
+        if (list.length === 0) {
+          box.innerHTML = '<p class="text-center text-[#6B5E70] py-6">아직 채팅이 없습니다. 첫 메시지를 남겨보세요.</p>';
+          return;
+        }
+
+        box.innerHTML = list.map(m => {
+          if (m.sender === '시스템' || m.msgType === 'notice') {
+            return (
+              '<div class="text-center py-1">' +
+                '<span class="inline-block px-3 py-1 rounded-full bg-[#FDF4F7] border border-[#B76E79]/20 text-[11px] font-semibold text-[#964F5B] keep-all">' +
+                  m.text +
+                '</span>' +
+              '</div>'
+            );
+          }
+
+          const isMine = myName && m.sender === myName;
+          const isCounselorMsg = m.senderRole === 'counselor' || m.senderRole === 'admin';
+          const roleTag = isCounselorMsg
+            ? '<span class="ml-1 px-1.5 py-0.2 rounded bg-[#FDF4F7] text-[#964F5B] text-[10px] font-bold">리더</span>'
+            : '';
+
+          if (isMine) {
+            return (
+              '<div class="flex flex-col items-end">' +
+                '<div class="flex items-center gap-1 text-[10px] text-[#6B5E70] mb-0.5">' +
+                  '<span>' + m.time + '</span>' +
+                  '<span class="font-bold text-[#964F5B]">' + m.sender + '</span>' +
+                '</div>' +
+                '<div class="max-w-[82%] px-3 py-2 rounded-2xl rounded-tr-sm rose-gold-btn text-xs keep-all">' +
+                  m.text +
+                '</div>' +
+              '</div>'
+            );
+          }
+
+          return (
+            '<div class="flex flex-col items-start">' +
+              '<div class="flex items-center gap-1 text-[10px] text-[#6B5E70] mb-0.5">' +
+                '<span class="font-bold text-[#2D2430]">' + m.sender + '</span>' +
+                roleTag +
+                '<span>' + m.time + '</span>' +
+              '</div>' +
+              '<div class="max-w-[82%] px-3 py-2 rounded-2xl rounded-tl-sm bg-white border border-[#B76E79]/20 text-[#2D2430] text-xs keep-all">' +
+                m.text +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
         box.scrollTop = box.scrollHeight;
       },
 
-      sendChatMessage(e) {
+      async sendChatMessage(e) {
         e.preventDefault();
         const input = document.getElementById('chatInput');
         const text = input.value.trim();
         const user = this.getCurrentUser();
         if (!text || !user || !this.currentRoomId) return;
 
-        if (!this.state.chats[this.currentRoomId]) this.state.chats[this.currentRoomId] = [];
-        this.state.chats[this.currentRoomId].push({
-          sender: user.name,
-          text,
-          time: '방금 전'
-        });
         input.value = '';
-        this.save();
-        this.renderChat();
+        await this.pushChatMessage({
+          sender: user.name,
+          senderRole: user.role,
+          msgType: 'chat',
+          text,
+          time: this.formatNowTime()
+        });
       },
 
-      sendTipCoins(amount) {
+      async sendTipCoins(amount) {
         const user = this.getCurrentUser();
         const room = this.state.rooms.find(r => r.id === this.currentRoomId);
         if (!user || !room) return;
@@ -1992,13 +2236,13 @@
         document.getElementById('roomCoinBalance').textContent = user.coins;
         document.getElementById('lobbyCoinBalance').textContent = user.coins;
 
-        if (!this.state.chats[this.currentRoomId]) this.state.chats[this.currentRoomId] = [];
-        this.state.chats[this.currentRoomId].push({
+        await this.pushChatMessage({
           sender: '시스템',
-          text: user.name + '님이 ' + amount + ' MC를 후원했습니다. (최저 수수료 5.0% 적용 · 상담사 ' + netCoins + ' MC 정산)',
-          time: '방금 전'
-        });
-        this.renderChat();
+          senderRole: 'system',
+          msgType: 'notice',
+          text: '🪙 ' + user.name + '님이 ' + amount + ' MC 후원 (수수료 5.0% · 상담사 ' + netCoins + ' MC 정산)',
+          time: this.formatNowTime()
+        }, true);
         this.toast('🪙 ' + amount + ' MC 후원 완료 (수수료 5.0% 반영)');
       },
 
