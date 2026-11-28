@@ -941,6 +941,8 @@
     const STORAGE_KEY = 'arcana_live_state_v2026_11';
     const BOARD_SYNC_PREFIX = 'arcana_room_board_sync_v1_';
     const CHAT_SYNC_PREFIX = 'arcana_room_chat_sync_v1_';
+    const BOARD_TAG_PREFIX = '[[BOARD:';
+    const BOARD_TAG_SUFFIX = ']]';
     const ADMIN_PIN = '1984';
 
     const DEFAULT_STATE = {
@@ -958,26 +960,31 @@
       chats: {}
     };
 
-    function stripBoardMarker(rawStyle) {
-      if (!rawStyle || typeof rawStyle !== 'string') {
-        return 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)';
+    function splitMessageAndBoardTag(rawText) {
+      if (!rawText || typeof rawText !== 'string') {
+        return { cleanText: '', boardObj: null };
       }
-      const idx = rawStyle.indexOf('/*ARCANA_BOARD:');
-      return idx >= 0 ? rawStyle.slice(0, idx) : rawStyle;
+      const sIdx = rawText.indexOf(BOARD_TAG_PREFIX);
+      if (sIdx === -1) {
+        return { cleanText: rawText, boardObj: null };
+      }
+      const eIdx = rawText.indexOf(BOARD_TAG_SUFFIX, sIdx + BOARD_TAG_PREFIX.length);
+      if (eIdx === -1) {
+        return { cleanText: rawText.slice(0, sIdx).trim(), boardObj: null };
+      }
+      const jsonStr = rawText.slice(sIdx + BOARD_TAG_PREFIX.length, eIdx);
+      const cleanText = (rawText.slice(0, sIdx) + rawText.slice(eIdx + BOARD_TAG_SUFFIX.length)).trim();
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed && Array.isArray(parsed.cards)) {
+          return { cleanText, boardObj: parsed };
+        }
+      } catch (err) {}
+      return { cleanText, boardObj: null };
     }
 
-    function extractBoardMarkerJson(rawStyle) {
-      if (!rawStyle || typeof rawStyle !== 'string') return '';
-      const start = rawStyle.indexOf('/*ARCANA_BOARD:');
-      if (start === -1) return '';
-      const end = rawStyle.indexOf('*/', start);
-      if (end === -1) return '';
-      return rawStyle.slice(start + '/*ARCANA_BOARD:'.length, end);
-    }
-
-    function embedBoardMarker(cleanStyle, payloadObj) {
-      const base = stripBoardMarker(cleanStyle);
-      return base + '/*ARCANA_BOARD:' + JSON.stringify(payloadObj) + '*/';
+    function attachBoardTagToText(noticeText, boardObj) {
+      return (noticeText || '') + BOARD_TAG_PREFIX + JSON.stringify(boardObj) + BOARD_TAG_SUFFIX;
     }
 
     function loadState() {
@@ -1003,8 +1010,6 @@
     }
 
     function normalizeRoomRow(row) {
-      const rawStyle = row.bg_style || row.bgStyle || 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)';
-      const markerJson = extractBoardMarkerJson(rawStyle);
       return {
         id: row.id,
         title: row.title,
@@ -1013,8 +1018,7 @@
         category: row.category || '종합 타로',
         price: Number(row.price ?? 50),
         uprightOnly: Boolean(row.upright_only ?? row.uprightOnly),
-        bgStyle: stripBoardMarker(rawStyle),
-        boardMarkerJson: markerJson,
+        bgStyle: row.bg_style || row.bgStyle || 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)',
         bgImage: row.bg_image || row.bgImage || ''
       };
     }
@@ -1034,7 +1038,6 @@
       roomsChannel: null,
       chatChannel: null,
       liveSyncTimer: null,
-      _lastBoardSig: '',
       dbStatusSummary: '확인 전',
       _ptrStartY: 0,
       _ptrPulling: false,
@@ -1554,9 +1557,6 @@
                   if (!document.getElementById('lobbyView').classList.contains('hidden')) {
                     this.renderLobby();
                   }
-                  if (this.currentRoomId === updated.id && updated.boardMarkerJson) {
-                    this.applyBoardSyncPayload(updated.boardMarkerJson);
-                  }
                 } else if (payload.eventType === 'DELETE' && payload.old && payload.old.id) {
                   this.state.rooms = this.state.rooms.filter(r => r.id !== payload.old.id);
                   this.save();
@@ -1603,13 +1603,6 @@
           this.save();
           this.setDbStatus('[' + hostName + '] ✅ 공용DB 방 ' + cloudRooms.length + '개');
           this.renderLobby();
-
-          if (this.currentRoomId) {
-            const activeCloudRoom = cloudRooms.find(r => r.id === this.currentRoomId);
-            if (activeCloudRoom && activeCloudRoom.boardMarkerJson) {
-              this.applyBoardSyncPayload(activeCloudRoom.boardMarkerJson);
-            }
-          }
 
           if (showNotice) {
             this.toast('[' + hostName + '] 공용 DB 방 ' + cloudRooms.length + '개 확인 완료');
@@ -1830,7 +1823,6 @@
           price,
           uprightOnly,
           bgStyle: this.selectedBgStyle,
-          boardMarkerJson: '',
           bgImage: this.selectedBgImage
         };
 
@@ -1857,7 +1849,6 @@
         if (!room || !user) return;
 
         this.currentRoomId = room.id;
-        this._lastBoardSig = '';
         document.getElementById('lobbyView').classList.add('hidden');
         document.getElementById('roomView').classList.remove('hidden');
 
@@ -1889,10 +1880,6 @@
 
       pullSavedRoomBoard(roomId) {
         if (!roomId) return;
-        const room = (this.state.rooms || []).find(r => r.id === roomId);
-        if (room && room.boardMarkerJson) {
-          this.applyBoardSyncPayload(room.boardMarkerJson);
-        }
         try {
           const raw = localStorage.getItem(BOARD_SYNC_PREFIX + roomId);
           if (raw) {
@@ -1907,26 +1894,16 @@
             if (Array.isArray(parsedChats)) {
               const prevLen = (this.state.chats[roomId] || []).length;
               this.state.chats[roomId] = parsedChats;
+              for (let i = parsedChats.length - 1; i >= 0; i--) {
+                const m = parsedChats[i];
+                if (m && m.boardState && Array.isArray(m.boardState.cards)) {
+                  this.applyBoardSyncPayload(m.boardState);
+                  break;
+                }
+              }
               if (parsedChats.length !== prevLen) {
                 this.renderChat();
               }
-            }
-          }
-        } catch (err) {}
-      },
-
-      async syncBoardFromCloudRoomRow(roomId) {
-        if (!supabaseClient || !roomId) return;
-        try {
-          const { data, error } = await supabaseClient
-            .from('rooms')
-            .select('id, bg_style')
-            .eq('id', roomId)
-            .maybeSingle();
-          if (!error && data && data.bg_style) {
-            const marker = extractBoardMarkerJson(data.bg_style);
-            if (marker) {
-              this.applyBoardSyncPayload(marker);
             }
           }
         } catch (err) {}
@@ -1938,9 +1915,8 @@
           if (!this.currentRoomId) return;
           if (document.getElementById('roomView').classList.contains('hidden')) return;
           this.pullSavedRoomBoard(this.currentRoomId);
-          this.syncBoardFromCloudRoomRow(this.currentRoomId);
           this.loadRoomChatsFromCloud();
-        }, 650);
+        }, 700);
       },
 
       stopRoomAutoSync() {
@@ -1956,17 +1932,10 @@
         }
       },
 
-      applyBoardSyncPayload(rawJson) {
+      applyBoardSyncPayload(boardData) {
         try {
-          const data = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
+          const data = typeof boardData === 'string' ? JSON.parse(boardData) : boardData;
           if (!data || !Array.isArray(data.cards)) return;
-
-          const sig = JSON.stringify({
-            spreadCount: data.spreadCount || this.spreadCount,
-            cards: data.cards
-          });
-          if (sig === this._lastBoardSig) return;
-          this._lastBoardSig = sig;
 
           if (typeof data.spreadCount === 'number' && [1, 3, 5].includes(data.spreadCount)) {
             this.spreadCount = data.spreadCount;
@@ -2001,23 +1970,10 @@
           cards: this.drawnCards.map(c => ({ id: c.id, isReversed: Boolean(c.isReversed) }))
         };
         const serialized = JSON.stringify(payloadObj);
-        this._lastBoardSig = serialized;
 
         try {
           localStorage.setItem(BOARD_SYNC_PREFIX + this.currentRoomId, serialized);
         } catch (err) {}
-
-        const roomObj = (this.state.rooms || []).find(r => r.id === this.currentRoomId);
-        if (roomObj) {
-          roomObj.boardMarkerJson = serialized;
-          this.save();
-          if (supabaseClient) {
-            try {
-              const markedStyle = embedBoardMarker(roomObj.bgStyle, payloadObj);
-              await supabaseClient.from('rooms').update({ bg_style: markedStyle }).eq('id', this.currentRoomId);
-            } catch (err) {}
-          }
-        }
 
         if (this.chatChannel && supabaseClient) {
           try {
@@ -2034,8 +1990,9 @@
             sender: actorLabel || '시스템',
             senderRole: actorLabel ? 'client' : 'system',
             msgType: 'notice',
-            text: noticeText,
-            time: this.formatNowTime()
+            text: attachBoardTagToText(noticeText, payloadObj),
+            time: this.formatNowTime(),
+            boardState: payloadObj
           }, true);
         }
       },
@@ -2059,15 +2016,18 @@
             .on('broadcast', { event: 'chat_update' }, (msg) => {
               if (this.currentRoomId === roomId && msg && msg.payload) {
                 const cmsg = msg.payload;
-                if (cmsg.boardState) {
-                  this.applyBoardSyncPayload(cmsg.boardState);
+                const extracted = splitMessageAndBoardTag(cmsg.text || '');
+                const boardData = extracted.boardObj || cmsg.boardState;
+                if (boardData) {
+                  this.applyBoardSyncPayload(boardData);
                 }
+                const cleanMsg = { ...cmsg, text: extracted.cleanText || cmsg.text };
                 if (!this.state.chats[roomId]) this.state.chats[roomId] = [];
                 const dup = this.state.chats[roomId].some(m =>
-                  m.sender === cmsg.sender && m.text === cmsg.text && m.time === cmsg.time
+                  m.sender === cleanMsg.sender && m.text === cleanMsg.text && m.time === cleanMsg.time
                 );
                 if (!dup) {
-                  this.state.chats[roomId].push(cmsg);
+                  this.state.chats[roomId].push(cleanMsg);
                   this.save();
                   localStorage.setItem(CHAT_SYNC_PREFIX + roomId, JSON.stringify(this.state.chats[roomId]));
                   this.renderChat();
@@ -2080,20 +2040,20 @@
               (payload) => {
                 if (!payload.new) return;
                 const row = payload.new;
+                const extracted = splitMessageAndBoardTag(row.text || '');
+                if (extracted.boardObj && this.currentRoomId === roomId) {
+                  this.applyBoardSyncPayload(extracted.boardObj);
+                }
                 const msg = {
                   id: row.id,
                   sender: row.sender,
                   senderRole: row.sender_role || 'client',
                   msgType: row.msg_type || 'chat',
-                  text: row.text,
-                  time: row.time_label || '방금 전'
+                  text: extracted.cleanText || row.text,
+                  time: row.time_label || '방금 전',
+                  boardState: extracted.boardObj || null
                 };
-                if (msg.msgType === 'board_sync') {
-                  if (this.currentRoomId === roomId) {
-                    this.applyBoardSyncPayload(msg.text);
-                  }
-                  return;
-                }
+                if (msg.msgType === 'board_sync') return;
                 if (!this.state.chats[roomId]) this.state.chats[roomId] = [];
                 const dup = this.state.chats[roomId].some(m =>
                   (m.id && msg.id && m.id === msg.id) ||
@@ -2131,17 +2091,19 @@
               let latestBoardSync = null;
               const visibleMessages = [];
               data.forEach(row => {
-                if (row.msg_type === 'board_sync') {
-                  latestBoardSync = row.text;
-                  return;
+                if (row.msg_type === 'board_sync') return;
+                const extracted = splitMessageAndBoardTag(row.text || '');
+                if (extracted.boardObj) {
+                  latestBoardSync = extracted.boardObj;
                 }
                 visibleMessages.push({
                   id: row.id,
                   sender: row.sender,
                   senderRole: row.sender_role || 'client',
                   msgType: row.msg_type || 'chat',
-                  text: row.text,
-                  time: row.time_label || '방금 전'
+                  text: extracted.cleanText || row.text,
+                  time: row.time_label || '방금 전',
+                  boardState: extracted.boardObj || null
                 });
               });
               const localList = this.state.chats[roomId] || [];
@@ -2150,9 +2112,17 @@
                 const key = m.id || (m.sender + '|' + m.text + '|' + m.time);
                 mergedMap.set(key, m);
               });
-              this.state.chats[roomId] = Array.from(mergedMap.values()).slice(-150);
+              const mergedArr = Array.from(mergedMap.values()).slice(-150);
+              this.state.chats[roomId] = mergedArr;
               this.save();
-              localStorage.setItem(CHAT_SYNC_PREFIX + roomId, JSON.stringify(this.state.chats[roomId]));
+              localStorage.setItem(CHAT_SYNC_PREFIX + roomId, JSON.stringify(mergedArr));
+
+              for (let i = mergedArr.length - 1; i >= 0; i--) {
+                if (mergedArr[i] && mergedArr[i].boardState && Array.isArray(mergedArr[i].boardState.cards)) {
+                  latestBoardSync = mergedArr[i].boardState;
+                  break;
+                }
+              }
               if (latestBoardSync) {
                 this.applyBoardSyncPayload(latestBoardSync);
               }
@@ -2176,14 +2146,22 @@
           cards: this.drawnCards.map(c => ({ id: c.id, isReversed: Boolean(c.isReversed) }))
         };
 
+        const rawText = msgObj.text || '';
+        const extracted = splitMessageAndBoardTag(rawText);
+        const resolvedBoard = msgObj.boardState || extracted.boardObj || boardSnapshot;
+        const displayText = extracted.cleanText || rawText;
+        const dbText = (msgObj.msgType === 'notice' && resolvedBoard)
+          ? attachBoardTagToText(displayText, resolvedBoard)
+          : displayText;
+
         const item = {
           id: msgObj.id || generateUuid(),
           sender: msgObj.sender,
           senderRole: msgObj.senderRole || 'client',
           msgType: msgObj.msgType || 'chat',
-          text: msgObj.text,
+          text: displayText,
           time: msgObj.time || this.formatNowTime(),
-          boardState: msgObj.boardState || boardSnapshot
+          boardState: resolvedBoard
         };
 
         this.state.chats[roomId].push(item);
@@ -2201,7 +2179,7 @@
             await this.chatChannel.send({
               type: 'broadcast',
               event: 'chat_update',
-              payload: item
+              payload: { ...item, text: dbText }
             });
           } catch (err) {}
         }
@@ -2214,7 +2192,7 @@
               sender: item.sender,
               sender_role: item.senderRole,
               msg_type: item.msgType,
-              text: item.text,
+              text: dbText,
               time_label: item.time
             }]);
           } catch (err) {
@@ -2444,11 +2422,12 @@
         }
 
         box.innerHTML = list.map(m => {
+          const cleanText = splitMessageAndBoardTag(m.text || '').cleanText;
           if (m.sender === '시스템' || m.msgType === 'notice') {
             return (
               '<div class="text-center py-1">' +
                 '<span class="inline-block px-3 py-1 rounded-full bg-[#FDF4F7] border border-[#B76E79]/20 text-[11px] font-semibold text-[#964F5B] keep-all">' +
-                  m.text +
+                  cleanText +
                 '</span>' +
               '</div>'
             );
@@ -2468,7 +2447,7 @@
                   '<span class="font-bold text-[#964F5B]">' + m.sender + '</span>' +
                 '</div>' +
                 '<div class="max-w-[82%] px-3 py-2 rounded-2xl rounded-tr-sm rose-gold-btn text-xs keep-all">' +
-                  m.text +
+                  cleanText +
                 '</div>' +
               '</div>'
             );
@@ -2482,7 +2461,7 @@
                 '<span>' + m.time + '</span>' +
               '</div>' +
               '<div class="max-w-[82%] px-3 py-2 rounded-2xl rounded-tl-sm bg-white border border-[#B76E79]/20 text-[#2D2430] text-xs keep-all">' +
-                m.text +
+                cleanText +
               '</div>' +
             '</div>'
           );
@@ -2707,6 +2686,13 @@
               const parsedChats = JSON.parse(e.newValue);
               if (Array.isArray(parsedChats)) {
                 this.state.chats[this.currentRoomId] = parsedChats;
+                for (let i = parsedChats.length - 1; i >= 0; i--) {
+                  const m = parsedChats[i];
+                  if (m && m.boardState && Array.isArray(m.boardState.cards)) {
+                    this.applyBoardSyncPayload(m.boardState);
+                    break;
+                  }
+                }
                 this.renderChat();
               }
             } catch (err) {}
