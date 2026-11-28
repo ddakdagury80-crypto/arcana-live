@@ -488,16 +488,16 @@
           <button type="button" onclick="app.openCoinChargeModal()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-bold text-[#964F5B] whitespace-nowrap">
             ➕ 코인 충전
           </button>
-          <button type="button" onclick="app.shuffleAndSpreadDeck()" class="rose-gold-btn px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+          <button id="clientSpreadDeckBtn" type="button" onclick="app.shuffleAndSpreadDeck()" class="rose-gold-btn px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
             🃏 78장 부채꼴 펼치기
           </button>
-          <button type="button" onclick="app.clearBoard()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap">
+          <button id="clientClearBoardBtn" type="button" onclick="app.clearBoard()" class="soft-pill-btn px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap">
             초기화
           </button>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div id="clientSpreadControls" class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div class="flex items-center gap-1.5 flex-wrap">
           <span class="text-xs font-semibold text-[#6B5E70] mr-1">스프레드:</span>
           <button type="button" onclick="app.setSpreadCount(1)" data-spread="1" class="spread-mode-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-[#B76E79]/25 bg-white text-[#2D2430]">1장</button>
@@ -513,18 +513,19 @@
 
       <div class="spread-mat-bright rounded-3xl p-4 mb-5">
         <div class="flex items-center justify-between text-xs text-[#6B5E70] mb-3">
-          <span id="spreadGuideText" class="font-semibold text-[#2D2430]">3장의 카드를 아래 78장 부채꼴 덱에서 선택하세요.</span>
+          <span id="spreadGuideText" class="font-semibold text-[#2D2430]">내담자가 선택한 카드가 이곳에 표시됩니다.</span>
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-[#964F5B] border border-[#B76E79]/30">● LIVE 판 송출</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-[#964F5B] border border-[#B76E79]/30">● 실시간 카드 보드</span>
             <span id="remainingDeckCount">남은 카드: 78장</span>
           </div>
         </div>
         <div id="drawnCardsBoard" class="grid grid-cols-1 sm:grid-cols-3 gap-4 min-h-[220px] items-center justify-items-center"></div>
       </div>
 
-      <div class="mb-5">
+      <!-- 내담자 전용 부채꼴 덱 -->
+      <div id="clientFanDeckSection" class="mb-5">
         <div class="flex items-center justify-between px-1 mb-1">
-          <span class="text-xs font-bold text-[#2D2430]">✦ 78장 라이더-웨이트-스미스 부채꼴 덱</span>
+          <span class="text-xs font-bold text-[#2D2430]">✦ 78장 라이더-웨이트-스미스 부채꼴 덱 (내담자 선택용)</span>
           <span class="text-[11px] text-[#6B5E70]">좌우로 스크롤하며 카드를 선택하세요</span>
         </div>
         <div id="fanDeckContainer" class="fan-scroll-track rounded-2xl bg-white/60 border border-[#B76E79]/20"></div>
@@ -537,7 +538,7 @@
               <h3 class="text-xs font-bold text-[#2D2430]">💬 스푼 라이브 1:1 채팅</h3>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">● LIVE</span>
             </div>
-            <span class="text-[11px] font-semibold text-[#6B5E70]">채팅·카드 뽑기 실시간 송출</span>
+            <span class="text-[11px] font-semibold text-[#6B5E70]">내담자 카드 선택·대화 실시간 반영</span>
           </div>
           <div id="chatLogBox" class="h-52 overflow-y-auto space-y-2 p-3 rounded-xl bg-[#FDFBF7] border border-[#B76E79]/15 mb-2.5 text-xs"></div>
           <form onsubmit="app.sendChatMessage(event)" class="flex gap-2">
@@ -562,7 +563,7 @@
             </div>
           </div>
           <div class="p-3 rounded-xl bg-[#FDF4F7] border border-[#B76E79]/20 text-[11px] text-[#2D2430]">
-            카드를 뽑거나 확대하면 판 상태가 통째로 반대쪽 화면에 송출됩니다.
+            카드를 클릭하면 확대 보기 및 정·역방향 해설을 확인할 수 있습니다.
           </div>
         </div>
       </div>
@@ -733,12 +734,12 @@
     </div>
   </div>
 
-  <!-- 8. 카드 확대 해석 모달 (송출 장면) -->
+  <!-- 8. 카드 확대 해석 모달 -->
   <div id="cardDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="opal-glass max-w-md w-full rounded-3xl p-5">
       <div class="flex items-center justify-between mb-3">
         <span id="detailOrientationBadge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FDF4F7] text-[#964F5B]"></span>
-        <button type="button" onclick="app.closeCardDetailModal(true)" class="text-xs font-bold text-[#6B5E70] px-2 py-1">닫기</button>
+        <button type="button" onclick="app.closeCardDetailModal()" class="text-xs font-bold text-[#6B5E70] px-2 py-1">닫기</button>
       </div>
       <div class="flex flex-col sm:flex-row gap-4 items-center mb-4">
         <div id="detailCardArtFrame" class="w-32 h-48 rounded-xl border-2 border-[#D4AF37] bg-[#FFFDF8] overflow-hidden shrink-0 flex items-center justify-center"></div>
@@ -1308,6 +1309,30 @@
         return this.state.users.find(u => u.id === this.state.currentUser) || null;
       },
 
+      isClientUser() {
+        const u = this.getCurrentUser();
+        return !u || u.role === 'client';
+      },
+
+      applyRoomRoleLayout() {
+        const isClient = this.isClientUser();
+        const fanSec = document.getElementById('clientFanDeckSection');
+        const deckBtn = document.getElementById('clientSpreadDeckBtn');
+        const clearBtn = document.getElementById('clientClearBoardBtn');
+        const spreadCtrl = document.getElementById('clientSpreadControls');
+        const guideEl = document.getElementById('spreadGuideText');
+
+        if (fanSec) fanSec.classList.toggle('hidden', !isClient);
+        if (deckBtn) deckBtn.classList.toggle('hidden', !isClient);
+        if (clearBtn) clearBtn.classList.toggle('hidden', !isClient);
+        if (spreadCtrl) spreadCtrl.classList.toggle('hidden', !isClient);
+        if (guideEl) {
+          guideEl.textContent = isClient
+            ? (this.spreadCount + '장 스프레드 (' + this.drawnCards.length + '/' + this.spreadCount + '장 선택됨)')
+            : '내담자가 뽑은 카드가 실시간으로 표시됩니다.';
+        }
+      },
+
       isRoomCounselorOnline(room) {
         const user = this.getCurrentUser();
         if (!user) return false;
@@ -1840,6 +1865,7 @@
         }
 
         this.resetLocalDeckOnly();
+        this.applyRoomRoleLayout();
         this.pullSavedChatsOnly(room.id);
         this.pullSavedTableCast(room.id);
         this.renderChat();
@@ -1903,7 +1929,9 @@
           const pickedIds = new Set(this.drawnCards.map(c => c.id));
           this.availableDeck = FULL_78_DECK.filter(c => !pickedIds.has(c.id));
           this.renderBoard();
-          this.renderFanDeck();
+          if (this.isClientUser()) {
+            this.renderFanDeck();
+          }
         }
 
         if (typeof tableObj.detailIndex === 'number' && this.drawnCards[tableObj.detailIndex]) {
@@ -2153,7 +2181,7 @@
 
         if (supabaseClient) {
           try {
-            const { error } = await supabaseClient.from('room_chats').insert([{
+            await supabaseClient.from('room_chats').insert([{
               id: isValidUuid(item.id) ? item.id : generateUuid(),
               room_id: roomId,
               sender: item.sender,
@@ -2162,9 +2190,6 @@
               text: this.serializeMessageForDb(item),
               time_label: item.time
             }]);
-            if (error && !silentCloudError) {
-              this.toast('DB 전송 오류: ' + error.message);
-            }
           } catch (err) {
             if (!silentCloudError) {
               this.toast('채팅이 전송되었습니다.');
@@ -2224,6 +2249,7 @@
       },
 
       async setSpreadCount(count) {
+        if (!this.isClientUser()) return;
         this.spreadCount = count;
         document.querySelectorAll('.spread-mode-btn').forEach(btn => {
           const active = Number(btn.dataset.spread) === count;
@@ -2253,21 +2279,25 @@
         }
         this.drawnCards = [];
         this.renderBoard();
-        this.renderFanDeck();
+        if (this.isClientUser()) {
+          this.renderFanDeck();
+        }
       },
 
-      async shuffleAndSpreadDeck() {
+      shuffleAndSpreadDeck() {
+        if (!this.isClientUser()) return;
         this.resetLocalDeckOnly();
         this.activeDetailIndex = null;
         this.hideDetailModalOnly();
         if (this.currentRoomId) {
           const user = this.getCurrentUser();
-          const actorName = user ? user.name : '참여자';
+          const actorName = user ? user.name : '내담자';
           this.publishWholeTable('🃏 ' + actorName + '님이 78장 부채꼴 덱을 새로 펼쳤습니다.', null);
         }
       },
 
-      async clearBoard() {
+      clearBoard() {
+        if (!this.isClientUser()) return;
         this.drawnCards = [];
         this.activeDetailIndex = null;
         this.hideDetailModalOnly();
@@ -2278,6 +2308,7 @@
       },
 
       pickCardFromFan(cardId) {
+        if (!this.isClientUser()) return;
         if (this.drawnCards.length >= this.spreadCount) {
           this.toast('이번 스프레드는 최대 ' + this.spreadCount + '장까지 뽑을 수 있습니다.');
           return;
@@ -2312,8 +2343,12 @@
       renderBoard() {
         const board = document.getElementById('drawnCardsBoard');
         document.getElementById('remainingDeckCount').textContent = '남은 카드: ' + this.availableDeck.length + '장';
-        document.getElementById('spreadGuideText').textContent =
-          this.spreadCount + '장 스프레드 (' + this.drawnCards.length + '/' + this.spreadCount + '장 선택됨)';
+        const guideEl = document.getElementById('spreadGuideText');
+        if (guideEl) {
+          guideEl.textContent = this.isClientUser()
+            ? (this.spreadCount + '장 스프레드 (' + this.drawnCards.length + '/' + this.spreadCount + '장 선택됨)')
+            : '내담자가 고른 카드 (' + this.drawnCards.length + '장)';
+        }
 
         const colsClass =
           this.spreadCount === 1 ? 'grid-cols-1' :
@@ -2324,7 +2359,11 @@
         if (this.drawnCards.length === 0) {
           board.innerHTML =
             '<div class="col-span-full text-center py-8 px-4">' +
-              '<p class="text-xs sm:text-sm font-semibold text-[#6B5E70]">아래 78장 라이더-웨이트 부채꼴 덱에서 카드를 눌러 스프레드 매트에 올려보세요.</p>' +
+              '<p class="text-xs sm:text-sm font-semibold text-[#6B5E70]">' +
+                (this.isClientUser()
+                  ? '아래 78장 라이더-웨이트 부채꼴 덱에서 카드를 눌러 스프레드 매트에 올려보세요.'
+                  : '내담자가 부채꼴 덱에서 카드를 선택하면 이곳에 실시간으로 표시됩니다.') +
+              '</p>' +
             '</div>';
           return;
         }
@@ -2332,7 +2371,7 @@
         board.innerHTML = this.drawnCards.map((card, idx) => {
           const dirLabel = card.isReversed ? '역방향' : '정방향';
           return (
-            '<div onclick="app.openCardDetail(' + idx + ', true)" class="cursor-pointer flex flex-col items-center group">' +
+            '<div onclick="app.openCardDetail(' + idx + ', false)" class="cursor-pointer flex flex-col items-center group">' +
               '<div class="tarot-card-face group-hover:-translate-y-1 transition">' +
                 '<div class="text-[10px] font-bold text-[#964F5B] text-center truncate">' + card.num + '</div>' +
                 '<div class="tarot-art-box">' + buildCardArtworkHtml(card, card.isReversed, false) + '</div>' +
@@ -2347,6 +2386,7 @@
 
       renderFanDeck() {
         const container = document.getElementById('fanDeckContainer');
+        if (!container) return;
         container.innerHTML = this.availableDeck.map((card, idx) => {
           const tilt = ((idx % 7) - 3) * 1.4;
           return (
@@ -2386,22 +2426,16 @@
         modal.classList.remove('flex');
       },
 
-      openCardDetail(index, shouldCast = false) {
+      openCardDetail(index) {
         const card = this.drawnCards[index];
         if (!card) return;
         this.activeDetailIndex = index;
         this.renderDetailModalOnly(index);
-        if (shouldCast && this.currentRoomId) {
-          this.publishWholeTable('', index);
-        }
       },
 
-      closeCardDetailModal(shouldCast = false) {
+      closeCardDetailModal() {
         this.activeDetailIndex = null;
         this.hideDetailModalOnly();
-        if (shouldCast && this.currentRoomId) {
-          this.publishWholeTable('', null);
-        }
       },
 
       renderChat() {
