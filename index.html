@@ -515,7 +515,7 @@
         <div class="flex items-center justify-between text-xs text-[#6B5E70] mb-3">
           <span id="spreadGuideText" class="font-semibold text-[#2D2430]">3장의 카드를 아래 78장 부채꼴 덱에서 선택하세요.</span>
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-[#964F5B] border border-[#B76E79]/30">● LIVE 송출 화면</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-[#964F5B] border border-[#B76E79]/30">● LIVE 판 송출</span>
             <span id="remainingDeckCount">남은 카드: 78장</span>
           </div>
         </div>
@@ -1878,7 +1878,7 @@
 
       applyWholeTableState(tableObj) {
         if (!tableObj || typeof tableObj !== 'object') return;
-        if (tableObj.ts && tableObj.ts < this._lastTableTs) return;
+        if (tableObj.ts && tableObj.ts <= this._lastTableTs) return;
         if (tableObj.ts) this._lastTableTs = tableObj.ts;
 
         if (typeof tableObj.spreadCount === 'number' && [1, 3, 5].includes(tableObj.spreadCount)) {
@@ -2263,7 +2263,7 @@
         if (this.currentRoomId) {
           const user = this.getCurrentUser();
           const actorName = user ? user.name : '참여자';
-          await this.publishWholeTable('🃏 ' + actorName + '님이 78장 부채꼴 덱을 새로 펼쳤습니다.', null);
+          this.publishWholeTable('🃏 ' + actorName + '님이 78장 부채꼴 덱을 새로 펼쳤습니다.', null);
         }
       },
 
@@ -2273,11 +2273,11 @@
         this.hideDetailModalOnly();
         this.renderBoard();
         if (this.currentRoomId) {
-          await this.publishWholeTable('🧹 스프레드 보드를 초기화했습니다.', null);
+          this.publishWholeTable('🧹 스프레드 보드를 초기화했습니다.', null);
         }
       },
 
-      async pickCardFromFan(cardId) {
+      pickCardFromFan(cardId) {
         if (this.drawnCards.length >= this.spreadCount) {
           this.toast('이번 스프레드는 최대 ' + this.spreadCount + '장까지 뽑을 수 있습니다.');
           return;
@@ -2302,7 +2302,7 @@
         this.renderFanDeck();
 
         if (this.currentRoomId) {
-          await this.publishWholeTable(
+          this.publishWholeTable(
             '🃏 ' + actorName + '님이 [' + card.nameKo + '] (' + dirLabel + ') 카드를 골랐습니다. (' + this.drawnCards.length + '/' + this.spreadCount + '장)',
             this.activeDetailIndex
           );
@@ -2386,21 +2386,21 @@
         modal.classList.remove('flex');
       },
 
-      async openCardDetail(index, shouldCast = false) {
+      openCardDetail(index, shouldCast = false) {
         const card = this.drawnCards[index];
         if (!card) return;
         this.activeDetailIndex = index;
         this.renderDetailModalOnly(index);
         if (shouldCast && this.currentRoomId) {
-          await this.publishWholeTable('', index);
+          this.publishWholeTable('', index);
         }
       },
 
-      async closeCardDetailModal(shouldCast = false) {
+      closeCardDetailModal(shouldCast = false) {
         this.activeDetailIndex = null;
         this.hideDetailModalOnly();
         if (shouldCast && this.currentRoomId) {
-          await this.publishWholeTable('', null);
+          this.publishWholeTable('', null);
         }
       },
 
