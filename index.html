@@ -537,7 +537,7 @@
               <h3 class="text-xs font-bold text-[#2D2430]">💬 스푼 라이브 1:1 채팅</h3>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">● LIVE</span>
             </div>
-            <span class="text-[11px] font-semibold text-[#6B5E70]">실시간 자동 반영</span>
+            <span class="text-[11px] font-semibold text-[#6B5E70]">카드 선택·채팅 실시간 반영</span>
           </div>
           <div id="chatLogBox" class="h-52 overflow-y-auto space-y-2 p-3 rounded-xl bg-[#FDFBF7] border border-[#B76E79]/15 mb-2.5 text-xs"></div>
           <form onsubmit="app.sendChatMessage(event)" class="flex gap-2">
@@ -940,6 +940,7 @@
 
     const STORAGE_KEY = 'arcana_live_state_v2026_11';
     const BOARD_SYNC_PREFIX = 'arcana_room_board_sync_v1_';
+    const CHAT_SYNC_PREFIX = 'arcana_room_chat_sync_v1_';
     const ADMIN_PIN = '1984';
 
     const DEFAULT_STATE = {
@@ -947,17 +948,37 @@
       depositAccountInfo: '',
       users: [
         { id: '00000000-0000-4000-8000-000000000001', name: '유진 대표', email: 'ceo@arcanalave.kr', password: '', role: 'admin', coins: 1000, specialty: '총괄 운영', bank: '등록 완료' },
-        { id: '00000000-0000-4000-8000-000000000002', name: '루나 타로', email: 'luna@arcanalave.kr', password: '1234', role: 'counselor', coins: 350, specialty: '연애·재회·속마음', bank: '카카오뱅크 3333-01-987654 (루나)' },
-        { id: '00000000-0000-4000-8000-000000000003', name: '하늘빛 내담자', email: 'sky@arcanalave.kr', password: '1234', role: 'client', coins: 200, specialty: '', bank: '' }
+        { id: '00000000-0000-4000-8000-000000000002', name: '루나 타로', email: 'luna@arcanalave.kr', password: '1234', role: 'counselor', coins: 0, specialty: '연애·재회·속마음', bank: '카카오뱅크 3333-01-987654 (루나)' },
+        { id: '00000000-0000-4000-8000-000000000003', name: '하늘빛 내담자', email: 'sky@arcanalave.kr', password: '1234', role: 'client', coins: 0, specialty: '', bank: '' }
       ],
       rooms: [],
-      ceoRevenueCoins: 120,
+      ceoRevenueCoins: 0,
       chargeRequests: [],
-      settlements: [
-        { id: 'st-1', counselorName: '루나 타로', grossCoins: 200, feeRate: 0.05, netCoins: 190, status: 'pending' }
-      ],
+      settlements: [],
       chats: {}
     };
+
+    function stripBoardMarker(rawStyle) {
+      if (!rawStyle || typeof rawStyle !== 'string') {
+        return 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)';
+      }
+      const idx = rawStyle.indexOf('/*ARCANA_BOARD:');
+      return idx >= 0 ? rawStyle.slice(0, idx) : rawStyle;
+    }
+
+    function extractBoardMarkerJson(rawStyle) {
+      if (!rawStyle || typeof rawStyle !== 'string') return '';
+      const start = rawStyle.indexOf('/*ARCANA_BOARD:');
+      if (start === -1) return '';
+      const end = rawStyle.indexOf('*/', start);
+      if (end === -1) return '';
+      return rawStyle.slice(start + '/*ARCANA_BOARD:'.length, end);
+    }
+
+    function embedBoardMarker(cleanStyle, payloadObj) {
+      const base = stripBoardMarker(cleanStyle);
+      return base + '/*ARCANA_BOARD:' + JSON.stringify(payloadObj) + '*/';
+    }
 
     function loadState() {
       try {
@@ -982,6 +1003,8 @@
     }
 
     function normalizeRoomRow(row) {
+      const rawStyle = row.bg_style || row.bgStyle || 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)';
+      const markerJson = extractBoardMarkerJson(rawStyle);
       return {
         id: row.id,
         title: row.title,
@@ -990,7 +1013,8 @@
         category: row.category || '종합 타로',
         price: Number(row.price ?? 50),
         uprightOnly: Boolean(row.upright_only ?? row.uprightOnly),
-        bgStyle: row.bg_style || row.bgStyle || 'linear-gradient(135deg, #FDFBF7 0%, #F7F3FC 55%, #FDF4F7 100%)',
+        bgStyle: stripBoardMarker(rawStyle),
+        boardMarkerJson: markerJson,
         bgImage: row.bg_image || row.bgImage || ''
       };
     }
@@ -1155,7 +1179,7 @@
           email,
           password: pw,
           role: this.registerRole,
-          coins: 150,
+          coins: 0,
           specialty: this.registerRole === 'counselor' ? specialty : '',
           bank: this.registerRole === 'counselor' ? bank : ''
         };
@@ -1163,7 +1187,7 @@
         this.state.users.push(newUser);
         this.save();
         await this.syncUserToCloud(newUser);
-        this.toast('✨ ' + nickname + '님, 아르카나 라이브 회원가입이 완료되었습니다.');
+        this.toast('✨ ' + nickname + '님, 회원가입이 완료되었습니다. (시작 코인: 0 MC)');
         this.loginAsUser(newUser);
       },
 
@@ -1198,7 +1222,7 @@
           email,
           password: '',
           role,
-          coins: 150,
+          coins: 0,
           specialty: role === 'counselor' ? '연애·속마음·운세' : '',
           bank: role === 'counselor' ? '소셜 간편 정산 등록' : ''
         };
@@ -1268,6 +1292,7 @@
             delete this.state.chats[id];
           }
           localStorage.removeItem(BOARD_SYNC_PREFIX + id);
+          localStorage.removeItem(CHAT_SYNC_PREFIX + id);
         });
         this.save();
 
@@ -1438,7 +1463,7 @@
             email: user.email || (dbId + '@arcanalave.kr'),
             nickname: user.name,
             role: user.role || 'client',
-            coins: Number(user.coins ?? 150),
+            coins: Number(user.coins ?? 0),
             specialty: user.specialty || '',
             bank: user.bank || ''
           }], { onConflict: 'id' });
@@ -1462,7 +1487,7 @@
                   email: row.email || existing.email || '',
                   password: existing.password || '',
                   role: inferredRole,
-                  coins: Number(row.coins ?? existing.coins ?? 150),
+                  coins: Number(row.coins ?? existing.coins ?? 0),
                   specialty: row.specialty || existing.specialty || '',
                   bank: row.bank || existing.bank || ''
                 });
@@ -1485,7 +1510,7 @@
               email: 'counselor_' + Date.now().toString().slice(-4) + '@arcanalave.kr',
               password: '',
               role: 'counselor',
-              coins: 150,
+              coins: 0,
               specialty: room.category || '종합 타로',
               bank: '정산 계좌 등록 예정'
             };
@@ -1528,6 +1553,9 @@
                   this.save();
                   if (!document.getElementById('lobbyView').classList.contains('hidden')) {
                     this.renderLobby();
+                  }
+                  if (this.currentRoomId === updated.id && updated.boardMarkerJson) {
+                    this.applyBoardSyncPayload(updated.boardMarkerJson);
                   }
                 } else if (payload.eventType === 'DELETE' && payload.old && payload.old.id) {
                   this.state.rooms = this.state.rooms.filter(r => r.id !== payload.old.id);
@@ -1575,6 +1603,13 @@
           this.save();
           this.setDbStatus('[' + hostName + '] ✅ 공용DB 방 ' + cloudRooms.length + '개');
           this.renderLobby();
+
+          if (this.currentRoomId) {
+            const activeCloudRoom = cloudRooms.find(r => r.id === this.currentRoomId);
+            if (activeCloudRoom && activeCloudRoom.boardMarkerJson) {
+              this.applyBoardSyncPayload(activeCloudRoom.boardMarkerJson);
+            }
+          }
 
           if (showNotice) {
             this.toast('[' + hostName + '] 공용 DB 방 ' + cloudRooms.length + '개 확인 완료');
@@ -1795,6 +1830,7 @@
           price,
           uprightOnly,
           bgStyle: this.selectedBgStyle,
+          boardMarkerJson: '',
           bgImage: this.selectedBgImage
         };
 
@@ -1839,7 +1875,7 @@
 
         this.resetLocalDeckOnly();
         this.pullSavedRoomBoard(room.id);
-        await this.loadRoomChatsFromCloud();
+        this.renderChat();
         this.subscribeChatRealtime(room.id);
         this.startRoomAutoSync();
         await this.pushChatMessage({
@@ -1853,10 +1889,45 @@
 
       pullSavedRoomBoard(roomId) {
         if (!roomId) return;
+        const room = (this.state.rooms || []).find(r => r.id === roomId);
+        if (room && room.boardMarkerJson) {
+          this.applyBoardSyncPayload(room.boardMarkerJson);
+        }
         try {
           const raw = localStorage.getItem(BOARD_SYNC_PREFIX + roomId);
           if (raw) {
             this.applyBoardSyncPayload(raw);
+          }
+        } catch (err) {}
+
+        try {
+          const chatRaw = localStorage.getItem(CHAT_SYNC_PREFIX + roomId);
+          if (chatRaw) {
+            const parsedChats = JSON.parse(chatRaw);
+            if (Array.isArray(parsedChats)) {
+              const prevLen = (this.state.chats[roomId] || []).length;
+              this.state.chats[roomId] = parsedChats;
+              if (parsedChats.length !== prevLen) {
+                this.renderChat();
+              }
+            }
+          }
+        } catch (err) {}
+      },
+
+      async syncBoardFromCloudRoomRow(roomId) {
+        if (!supabaseClient || !roomId) return;
+        try {
+          const { data, error } = await supabaseClient
+            .from('rooms')
+            .select('id, bg_style')
+            .eq('id', roomId)
+            .maybeSingle();
+          if (!error && data && data.bg_style) {
+            const marker = extractBoardMarkerJson(data.bg_style);
+            if (marker) {
+              this.applyBoardSyncPayload(marker);
+            }
           }
         } catch (err) {}
       },
@@ -1867,8 +1938,9 @@
           if (!this.currentRoomId) return;
           if (document.getElementById('roomView').classList.contains('hidden')) return;
           this.pullSavedRoomBoard(this.currentRoomId);
+          this.syncBoardFromCloudRoomRow(this.currentRoomId);
           this.loadRoomChatsFromCloud();
-        }, 1000);
+        }, 650);
       },
 
       stopRoomAutoSync() {
@@ -1922,7 +1994,7 @@
         } catch (err) {}
       },
 
-      async broadcastBoardState(noticeText) {
+      async broadcastBoardState(noticeText, actorLabel) {
         if (!this.currentRoomId) return;
         const payloadObj = {
           spreadCount: this.spreadCount,
@@ -1935,6 +2007,18 @@
           localStorage.setItem(BOARD_SYNC_PREFIX + this.currentRoomId, serialized);
         } catch (err) {}
 
+        const roomObj = (this.state.rooms || []).find(r => r.id === this.currentRoomId);
+        if (roomObj) {
+          roomObj.boardMarkerJson = serialized;
+          this.save();
+          if (supabaseClient) {
+            try {
+              const markedStyle = embedBoardMarker(roomObj.bgStyle, payloadObj);
+              await supabaseClient.from('rooms').update({ bg_style: markedStyle }).eq('id', this.currentRoomId);
+            } catch (err) {}
+          }
+        }
+
         if (this.chatChannel && supabaseClient) {
           try {
             await this.chatChannel.send({
@@ -1945,18 +2029,10 @@
           } catch (err) {}
         }
 
-        await this.pushChatMessage({
-          sender: '시스템',
-          senderRole: 'system',
-          msgType: 'board_sync',
-          text: serialized,
-          time: this.formatNowTime()
-        }, true);
-
         if (noticeText) {
           await this.pushChatMessage({
-            sender: '시스템',
-            senderRole: 'system',
+            sender: actorLabel || '시스템',
+            senderRole: actorLabel ? 'client' : 'system',
             msgType: 'notice',
             text: noticeText,
             time: this.formatNowTime()
@@ -1978,6 +2054,24 @@
             .on('broadcast', { event: 'board_update' }, (msg) => {
               if (this.currentRoomId === roomId && msg && msg.payload) {
                 this.applyBoardSyncPayload(msg.payload);
+              }
+            })
+            .on('broadcast', { event: 'chat_update' }, (msg) => {
+              if (this.currentRoomId === roomId && msg && msg.payload) {
+                const cmsg = msg.payload;
+                if (cmsg.boardState) {
+                  this.applyBoardSyncPayload(cmsg.boardState);
+                }
+                if (!this.state.chats[roomId]) this.state.chats[roomId] = [];
+                const dup = this.state.chats[roomId].some(m =>
+                  m.sender === cmsg.sender && m.text === cmsg.text && m.time === cmsg.time
+                );
+                if (!dup) {
+                  this.state.chats[roomId].push(cmsg);
+                  this.save();
+                  localStorage.setItem(CHAT_SYNC_PREFIX + roomId, JSON.stringify(this.state.chats[roomId]));
+                  this.renderChat();
+                }
               }
             })
             .on(
@@ -2008,6 +2102,7 @@
                 if (!dup) {
                   this.state.chats[roomId].push(msg);
                   this.save();
+                  localStorage.setItem(CHAT_SYNC_PREFIX + roomId, JSON.stringify(this.state.chats[roomId]));
                   if (this.currentRoomId === roomId) {
                     this.renderChat();
                   }
@@ -2049,8 +2144,15 @@
                   time: row.time_label || '방금 전'
                 });
               });
-              this.state.chats[roomId] = visibleMessages;
+              const localList = this.state.chats[roomId] || [];
+              const mergedMap = new Map();
+              [...visibleMessages, ...localList].forEach(m => {
+                const key = m.id || (m.sender + '|' + m.text + '|' + m.time);
+                mergedMap.set(key, m);
+              });
+              this.state.chats[roomId] = Array.from(mergedMap.values()).slice(-150);
               this.save();
+              localStorage.setItem(CHAT_SYNC_PREFIX + roomId, JSON.stringify(this.state.chats[roomId]));
               if (latestBoardSync) {
                 this.applyBoardSyncPayload(latestBoardSync);
               }
@@ -2069,22 +2171,39 @@
         if (!roomId) return;
         if (!this.state.chats[roomId]) this.state.chats[roomId] = [];
 
+        const boardSnapshot = {
+          spreadCount: this.spreadCount,
+          cards: this.drawnCards.map(c => ({ id: c.id, isReversed: Boolean(c.isReversed) }))
+        };
+
         const item = {
           id: msgObj.id || generateUuid(),
           sender: msgObj.sender,
           senderRole: msgObj.senderRole || 'client',
           msgType: msgObj.msgType || 'chat',
           text: msgObj.text,
-          time: msgObj.time || this.formatNowTime()
+          time: msgObj.time || this.formatNowTime(),
+          boardState: msgObj.boardState || boardSnapshot
         };
 
-        if (item.msgType !== 'board_sync') {
-          this.state.chats[roomId].push(item);
-          if (this.state.chats[roomId].length > 150) {
-            this.state.chats[roomId] = this.state.chats[roomId].slice(-150);
-          }
-          this.save();
-          this.renderChat();
+        this.state.chats[roomId].push(item);
+        if (this.state.chats[roomId].length > 150) {
+          this.state.chats[roomId] = this.state.chats[roomId].slice(-150);
+        }
+        this.save();
+        try {
+          localStorage.setItem(CHAT_SYNC_PREFIX + roomId, JSON.stringify(this.state.chats[roomId]));
+        } catch (err) {}
+        this.renderChat();
+
+        if (this.chatChannel && supabaseClient) {
+          try {
+            await this.chatChannel.send({
+              type: 'broadcast',
+              event: 'chat_update',
+              payload: item
+            });
+          } catch (err) {}
         }
 
         if (supabaseClient) {
@@ -2100,7 +2219,7 @@
             }]);
           } catch (err) {
             if (!silentCloudError) {
-              this.toast('로컬 채팅에 전송되었습니다.');
+              this.toast('채팅이 전송되었습니다.');
             }
           }
         }
@@ -2139,6 +2258,7 @@
             delete this.state.chats[leavingRoomId];
           }
           localStorage.removeItem(BOARD_SYNC_PREFIX + leavingRoomId);
+          localStorage.removeItem(CHAT_SYNC_PREFIX + leavingRoomId);
           this.save();
           if (supabaseClient) {
             try {
@@ -2218,7 +2338,7 @@
         const isReversed = uprightOnly ? false : Math.random() < 0.35;
         const dirLabel = isReversed ? '역방향' : '정방향';
         const user = this.getCurrentUser();
-        const actorName = user ? user.name : '참여자';
+        const actorName = user ? user.name : '내담자';
 
         this.drawnCards.push({
           ...card,
@@ -2230,8 +2350,7 @@
 
         if (this.currentRoomId) {
           await this.broadcastBoardState(
-            '🃏 ' + actorName + ' 카드 선택 (' + this.drawnCards.length + '/' + this.spreadCount + '): ' +
-            card.nameKo + ' (' + dirLabel + ')'
+            '🃏 ' + actorName + '님이 [' + card.nameKo + '] (' + dirLabel + ') 카드를 골랐습니다. (' + this.drawnCards.length + '/' + this.spreadCount + '장)'
           );
         }
       },
@@ -2582,6 +2701,15 @@
           if (!e || !e.key || !this.currentRoomId) return;
           if (e.key === BOARD_SYNC_PREFIX + this.currentRoomId && e.newValue) {
             this.applyBoardSyncPayload(e.newValue);
+          }
+          if (e.key === CHAT_SYNC_PREFIX + this.currentRoomId && e.newValue) {
+            try {
+              const parsedChats = JSON.parse(e.newValue);
+              if (Array.isArray(parsedChats)) {
+                this.state.chats[this.currentRoomId] = parsedChats;
+                this.renderChat();
+              }
+            } catch (err) {}
           }
         });
 
